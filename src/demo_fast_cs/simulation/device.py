@@ -5,8 +5,9 @@ from os import _exit
 
 import numpy as np
 import numpy.typing as npt
-from tickit.adapters.interpreters.command.command_interpreter import CommandInterpreter
+from tickit.adapters.interpreters.command import CommandInterpreter
 from tickit.adapters.interpreters.command.regex_command import RegexCommand
+from tickit.adapters.interpreters.wrappers import SplittingInterpreter
 from tickit.adapters.servers.tcp import ByteFormat, TcpServer
 from tickit.adapters.composed import ComposedAdapter
 from tickit.core.components.component import Component, ComponentConfig
@@ -108,7 +109,7 @@ class TempControllerAdapter(ComposedAdapter):
     ) -> None:
         super().__init__(
             TcpServer(host, port, ByteFormat(b"%b\r\n")),
-            CommandInterpreter(),
+            SplittingInterpreter(CommandInterpreter(), message_delimiter=b"\n"),
         )
 
     @RegexCommand(r"T([0-9][0-9])\?", False, "utf-8")
@@ -139,6 +140,10 @@ class TempControllerAdapter(ComposedAdapter):
     @RegexCommand(r"E([0-9][0-9])=(\d+\.?\d*)", True, "utf-8")
     async def set_end(self, index: str, value: str) -> None:
         self.device.set_end(int(index), float(value))
+
+    @RegexCommand(r"\w*", True, "utf-8")
+    async def ignore_whitespace(self) -> None:
+        pass
 
 
 @dataclass
