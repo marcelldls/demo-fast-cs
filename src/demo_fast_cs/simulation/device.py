@@ -48,7 +48,7 @@ class TempControllerDevice(Device):
         self._start = np.full(num_ramp_controllers, default_start, dtype=float)
         self._end = np.full(num_ramp_controllers, default_end, dtype=float)
         self._current = np.zeros(num_ramp_controllers, dtype=float)
-        self._enabled = np.full(num_ramp_controllers, False, dtype=bool)
+        self._enabled = np.full(num_ramp_controllers, 0, dtype=int)
         self._start_times = np.full(num_ramp_controllers, -1, dtype=int)
 
         self._ramp_rate: float = 1  # 1 unit/s
@@ -68,13 +68,13 @@ class TempControllerDevice(Device):
     def set_end(self, index: int, value: float):
         self._end[index] = value
 
-    def set_enabled(self, index: int, value: bool):
+    def set_enabled(self, index: int, value: int):
         if value:
             self._current[index] = self._start[index]
             self._start_times[index] = -1
-            self._enabled[index] = True
+            self._enabled[index] = 1
         else:
-            self._enabled[index] = False
+            self._enabled[index] = 0
 
     def get_enabled(self, index: int):
         return self._enabled[index]
@@ -87,7 +87,7 @@ class TempControllerDevice(Device):
         max_temps = self._current.copy()
         max_temps[can_ramp] += self._ramp_rate * (periods[can_ramp] / 1e9)
         self._current = np.minimum(max_temps, self._end)
-        self._enabled[self._current >= self._end] = False
+        self._enabled[self._current >= self._end] = 0
 
     @handle_exceptions
     def update(self, time: SimTime, inputs: Inputs) -> DeviceUpdate[Outputs]:
@@ -121,10 +121,9 @@ class TempControllerAdapter(ComposedAdapter):
     async def get_enabled(self, index: str) -> bytes:
         return str(self.device.get_enabled(int(index))).encode("utf-8")
 
-    @RegexCommand(r"N([0-9][0-9])=([Yy]|[Nn])", True, "utf-8")
-    async def set_enabled(self, index: str, value: str) -> None:
-        state = value in ("y", "Y")
-        self.device.set_enabled(int(index), state)
+    @RegexCommand(r"N([0-9][0-9])=([01])", True, "utf-8")
+    async def set_enabled(self, index: str, value: int) -> None:
+        self.device.set_enabled(int(index), value)
 
     @RegexCommand(r"S([0-9][0-9])\?", False, "utf-8")
     async def get_start(self, index: str) -> bytes:

@@ -43,13 +43,13 @@ class TempRampController(Controller):
     start: float
     end: float
     current: float
-    enabled: bool
+    enabled: int
 
     _fields = (
         FieldInfo("start", "S", float),
         FieldInfo("end", "E", float),
         FieldInfo("current", "T", float),
-        FieldInfo("enabled", "N", bool),
+        FieldInfo("enabled", "N", int),
     )
 
     def __init__(self, index, conn):
@@ -78,6 +78,10 @@ class TempRampController(Controller):
         print(f"Current: {self.current}")
         print(f"Enabled: {self.enabled}")
 
+    # # @put("enabled")
+    async def set_enabled(self, value: int):
+        await self._conn.send_command(f"N{self._suffix}={value}\r\n")
+
     # # @get("start")
     # def get_start(self):
     #     pass
@@ -95,16 +99,15 @@ class TempRampController(Controller):
 
 async def run_controller():
     tcont = await TempRampController.create(2)
-    conn = tcont._conn
 
     await tcont.update()
     await asyncio.sleep(1)
-    await conn.send_command("N02=Y\r\n")
+    await tcont.set_enabled(1)
     await asyncio.sleep(3)
     await tcont.update()
     await asyncio.sleep(3)
     await tcont.update()
-    await conn.send_command("N02=N\r\n")
+    await tcont.set_enabled(0)
     await tcont.update()
     await tcont.close()
 
