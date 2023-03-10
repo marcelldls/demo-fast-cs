@@ -1,37 +1,113 @@
-from demo.device import DeviceInterface
-from fastcs import BaseSettings, Controller, put, scan
+import asyncio
+from typing import NamedTuple, Type
+
+from .fast_cs import BaseSettings, Controller
+
+FieldInfo = NamedTuple("FieldInfo", (("name", str), ("prefix", str), ("type", Type)))
 
 
-class RampSettings(BaseSettings):
-    device_ip: str
+class TempControllerSettings(BaseSettings):
+    device_ip: str = "127.0.0.1"
+    device_port: int = 25565
 
 
-def get_ramp_settings():
-    return RampSettings()
+def get_settings():
+    return TempControllerSettings()
+
+
+class IPConnection:
+    def __init__(self, reader, writer):
+        self._reader = reader
+        self._writer = writer
+
+    @classmethod
+    async def connect(cls, ip, port):
+        reader, writer = await asyncio.open_connection(ip, port)
+        return cls(reader, writer)
+
+    async def send_command(self, message) -> None:
+        self._writer.write(message.encode("utf-8"))
+        await self._writer.drain()
+
+    async def send_query(self, message) -> str:
+        await self.send_command(message)
+        data = await self._reader.readline()
+        return data.decode("utf-8")
+
+    async def close(self):
+        self._writer.close()
+        await self._writer.wait_closed()
 
 
 class TempRampController(Controller):
     start: float
     end: float
+    current: float
+    enabled: bool
 
-    def __init__(self, index, device_interface):
-        super().__init__(f"ramp{index:02d}")
+    _fields = (
+        FieldInfo("start", "S", float),
+        FieldInfo("end", "E", float),
+        FieldInfo("current", "T", float),
+        FieldInfo("enabled", "N", bool),
+    )
 
-        self._settings: RampSettings = get_ramp_settings()
-        self._device_interface: DeviceInterface = device_interface
-        self._index: int = index
+    def __init__(self, index, conn):
+        suffix: str = f"{index:02d}"
+        super().__init__(f"ramp{suffix}")
+        self._conn: IPConnection = conn
+        self._suffix: str = suffix
 
-    @scan(2)
-    def update(self):
-        self.start = self._device_interface.get_start(self._index)
-        self.end = self._device_interface.get_end(self._index)
+    @classmethod
+    async def create(cls, index):
+        settings = get_settings()
+        conn = await IPConnection.connect(settings.device_ip, settings.device_port)
+        return cls(index, conn)
 
-    @put("start")
-    def put_start(self, value: float):
-        self._device_interface.set_start(self._index, value)
-        self.update()
+    async def close(self):
+        await self._conn.close()
 
-    @put("end")
-    def put_end(self, value: float):
-        self._device_interface.set_start(self._index, value)
-        self.update()
+    # @scan(0.1)
+    async def update(self):
+        for field in self._fields:
+            response = await self._conn.send_query(f"{field.prefix}{self._suffix}?\r\n")
+            setattr(self, field.name, field.type(response))
+
+        print(f"Start: {self.start}")
+        print(f"End: {self.end}")
+        print(f"Current: {self.current}")
+        print(f"Enabled: {self.enabled}")
+
+    # # @get("start")
+    # def get_start(self):
+    #     pass
+
+    # # @put("start")
+    # def put_start(self, value: float):
+    #     self._device_interface.set_start(self._index, value)
+    #     self.update()
+
+    # # @put("end")
+    # def put_end(self, value: float):
+    #     self._device_interface.set_start(self._index, value)
+    #     self.update()
+
+
+async def run_controller():
+    tcont = await TempRampController.create(2)
+    conn = tcont._conn
+
+    await tcont.update()
+    await asyncio.sleep(1)
+    await conn.send_command("N02=Y\r\n")
+    await asyncio.sleep(3)
+    await tcont.update()
+    await asyncio.sleep(3)
+    await tcont.update()
+    await conn.send_command("N02=N\r\n")
+    await tcont.update()
+    await tcont.close()
+
+
+def main():
+    asyncio.run(run_controller())

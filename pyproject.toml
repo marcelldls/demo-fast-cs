@@ -38,6 +38,7 @@ dev = [
 
 [project.scripts]
 demo-fast-cs = "demo_fast_cs.__main__:main"
+demo-controller = "demo_fast_cs.controllers:main"
 
 [project.urls]
 GitHub = "https://github.com/DiamondLightSource/demo-fast-cs"

@@ -6,7 +6,7 @@
     name: tempcont
     inputs:
         flux: source:value
-    num_ramp_controllers: 16
+    num_ramp_controllers: 4
     default_start: 10
     default_end: 50
 - tickit.devices.sink.Sink:

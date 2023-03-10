@@ -1,15 +1,15 @@
 import logging
-from dataclasses import dataclass
 import traceback
+from dataclasses import dataclass
 from os import _exit
 
 import numpy as np
 import numpy.typing as npt
+from tickit.adapters.composed import ComposedAdapter
 from tickit.adapters.interpreters.command import CommandInterpreter
 from tickit.adapters.interpreters.command.regex_command import RegexCommand
 from tickit.adapters.interpreters.wrappers import SplittingInterpreter
 from tickit.adapters.servers.tcp import ByteFormat, TcpServer
-from tickit.adapters.composed import ComposedAdapter
 from tickit.core.components.component import Component, ComponentConfig
 from tickit.core.components.device_simulation import DeviceSimulation
 from tickit.core.device import Device, DeviceUpdate
@@ -110,6 +110,7 @@ class TempControllerAdapter(ComposedAdapter):
         super().__init__(
             TcpServer(host, port, ByteFormat(b"%b\r\n")),
             SplittingInterpreter(CommandInterpreter(), message_delimiter=b"\n"),
+            # CommandInterpreter(),
         )
 
     @RegexCommand(r"T([0-9][0-9])\?", False, "utf-8")

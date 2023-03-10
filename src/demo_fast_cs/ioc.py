@@ -1,6 +1,6 @@
-from demo.controllers import TempRampController
-from demo.device import DeviceInterface
 from fastcs import Controller
+
+from demo_fast_cs.controllers import TempRampController
 
 
 class XZ123TempController(Controller):
@@ -10,6 +10,4 @@ class XZ123TempController(Controller):
         super().__init__("temp")
         device_interface = DeviceInterface(num_ramp_controllers)
         for i in range(num_ramp_controllers):
-            self.ramp_controllers.append(
-                TempRampController(i, device_interface)
-            )
+            self.ramp_controllers.append(TempRampController(i, device_interface))
