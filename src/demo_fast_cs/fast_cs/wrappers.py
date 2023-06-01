@@ -1,5 +1,7 @@
-from .api_methods import GetMethod, PutMethod, UpdateMethod
+from .api_methods import PutMethod, ScanMethod
 
-get = GetMethod
-update = UpdateMethod
 put = PutMethod
+
+
+def scan(rate: float):
+    return lambda fn: ScanMethod(fn, rate)

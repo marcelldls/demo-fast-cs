@@ -28,23 +28,19 @@ class APIMethod:
         return self._fn(*args, **kwargs)
 
 
-class UpdateMethod(APIMethod):
-    def __init__(self, fn: Callable) -> None:
+class ScanMethod(APIMethod):
+    def __init__(self, fn: Callable, rate: float) -> None:
         super().__init__(fn)
+        self._rate = rate
 
         if self._return_type not in (bool, Signature.empty):
-            raise FastCSException("Update method return type must be boolean or empty")
+            raise FastCSException("Scan method return type must be boolean or empty")
 
-        if self._parameters:
-            raise FastCSException("Update method cannot have parameters")
+        if not len(self._parameters) == 1:
+            raise FastCSException("Scan method cannot have parameters")
 
-
-class GetMethod(APIMethod):
-    def __init__(self, fn: Callable) -> None:
-        super().__init__(fn)
-
-        if self._parameters:
-            raise FastCSException("Get method cannot have parameters")
+        if self._rate <= 0:
+            raise FastCSException("Scan method must have a positive rate")
 
 
 class PutMethod(APIMethod):
