@@ -78,9 +78,13 @@ class TempRampController(Controller):
         print(f"Current: {self.current}")
         print(f"Enabled: {self.enabled}")
 
-    # # @put("enabled")
+    # @put("enabled")
     async def set_enabled(self, value: int):
         await self._conn.send_command(f"N{self._suffix}={value}\r\n")
+
+    # @get("enabled")
+    async def get_enabled(self) -> int:
+        return int(await self._conn.send_query(f"N{self._suffix}?"))
 
     # # @get("start")
     # def get_start(self):
@@ -95,6 +99,9 @@ class TempRampController(Controller):
     # def put_end(self, value: float):
     #     self._device_interface.set_start(self._index, value)
     #     self.update()
+
+    def get_mapping(self) -> Mapping:
+        pass
 
 
 async def run_controller():
