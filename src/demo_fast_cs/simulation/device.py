@@ -79,6 +79,12 @@ class TempControllerDevice(Device):
     def get_enabled(self, index: int):
         return self._enabled[index]
 
+    def get_ramp_rate(self):
+        return self._ramp_rate
+
+    def set_ramp_rate(self, rate: float):
+        self._ramp_rate = rate
+
     def ramp(
         self,
         periods: npt.NDArray,
@@ -140,6 +146,14 @@ class TempControllerAdapter(ComposedAdapter):
     @RegexCommand(r"E([0-9][0-9])=(\d+\.?\d*)", True, "utf-8")
     async def set_end(self, index: str, value: str) -> None:
         self.device.set_end(int(index), float(value))
+
+    @RegexCommand(r"R\?", False, "utf-8")
+    async def get_ramp_rate(self) -> bytes:
+        return str(self.device.get_ramp_rate()).encode("utf-8")
+
+    @RegexCommand(r"R=(\d+\.?\d*)", True, "utf-8")
+    async def set_ramp_rate(self, value: str) -> None:
+        self.device.set_ramp_rate(float(value))
 
     @RegexCommand(r"\w*", True, "utf-8")
     async def ignore_whitespace(self) -> None:

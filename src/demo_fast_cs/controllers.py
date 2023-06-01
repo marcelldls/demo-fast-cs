@@ -15,12 +15,12 @@ class TempControllerSettings:
 
 
 class TempController(Controller):
-    mode: int
-
-    _fields = (FieldInfo("mode", "M", int),)
+    _fields = (FieldInfo("ramp_rate", "R", float),)
 
     def __init__(self, settings: TempControllerSettings):
         super().__init__()
+
+        self.ramp_rate: float = 0
 
         self._conn: IPConnection = IPConnection()
 
@@ -30,6 +30,16 @@ class TempController(Controller):
             self._ramp_controllers.append(controller)
             self.register_sub_controller(controller)
 
+    @put
+    async def put_ramp_rate(self, value: float):
+        await self._conn.send_command(f"R={value}\r\n")
+
+    @scan(0.1)
+    async def update(self):
+        for field in self._fields:
+            response = await self._conn.send_query(f"{field.prefix}?\r\n")
+            setattr(self, field.name, field.type(response))
+
     async def connect(self, settings: IPConnectionSettings):
         await self._conn.connect(settings)
 
@@ -38,11 +48,6 @@ class TempController(Controller):
 
 
 class TempRampController(SubController):
-    start: float
-    end: float
-    current: float
-    enabled: int
-
     _fields = (
         FieldInfo("start", "S", float),
         FieldInfo("end", "E", float),
@@ -55,6 +60,11 @@ class TempRampController(SubController):
         super().__init__(f"ramp{suffix}")
         self._conn: IPConnection = conn
         self._suffix: str = suffix
+
+        self.start: float = 0
+        self.end: float = 0
+        self.current: float = 0
+        self.enabled: int = 0
 
     @scan(0.1)
     async def update(self):
