@@ -1,9 +1,9 @@
-from .api_methods import APIMethod, GetMethod, PutMethod, UpdateMethod
+from .api_methods import APIMethod
 
 
 class Mapping:
-    def __init__(self, get_methods, put_methods):
-        pass
+    def __init__(self, methods: list[APIMethod]):
+        self._methods = methods
 
     def get_methods(self):
-        pass
+        return self._methods

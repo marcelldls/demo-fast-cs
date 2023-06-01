@@ -2,6 +2,7 @@ import asyncio
 from typing import NamedTuple, Type
 
 from .fast_cs import BaseSettings, Controller
+from .fast_cs.wrappers import put
 
 FieldInfo = NamedTuple("FieldInfo", (("name", str), ("prefix", str), ("type", Type)))
 
@@ -15,6 +16,8 @@ def get_settings():
     return TempControllerSettings()
 
 
+# TODO: Do not require connection to IP before runtime; instead, that should be called
+# as standard method from controller interface.
 class IPConnection:
     def __init__(self, reader, writer):
         self._reader = reader
@@ -78,7 +81,7 @@ class TempRampController(Controller):
         print(f"Current: {self.current}")
         print(f"Enabled: {self.enabled}")
 
-    # @put("enabled")
+    @put
     async def set_enabled(self, value: int):
         await self._conn.send_command(f"N{self._suffix}={value}\r\n")
 
@@ -99,9 +102,6 @@ class TempRampController(Controller):
     # def put_end(self, value: float):
     #     self._device_interface.set_start(self._index, value)
     #     self.update()
-
-    def get_mapping(self) -> Mapping:
-        pass
 
 
 async def run_controller():
