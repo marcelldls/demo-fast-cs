@@ -1,48 +1,43 @@
 import asyncio
+from dataclasses import dataclass
 from typing import NamedTuple, Type
 
-from .fast_cs import BaseSettings, Controller
+from .fast_cs import Controller, SubController
+from .fast_cs.connections import IPConnection, IPConnectionSettings
 from .fast_cs.wrappers import put
 
 FieldInfo = NamedTuple("FieldInfo", (("name", str), ("prefix", str), ("type", Type)))
 
 
-class TempControllerSettings(BaseSettings):
-    device_ip: str = "127.0.0.1"
-    device_port: int = 25565
+@dataclass
+class TempControllerSettings:
+    num_ramp_controllers: int
 
 
-def get_settings():
-    return TempControllerSettings()
+class TempController(Controller):
+    mode: int
 
+    _fields = (FieldInfo("mode", "M", int),)
 
-# TODO: Do not require connection to IP before runtime; instead, that should be called
-# as standard method from controller interface.
-class IPConnection:
-    def __init__(self, reader, writer):
-        self._reader = reader
-        self._writer = writer
+    def __init__(self, settings: TempControllerSettings):
+        super().__init__()
 
-    @classmethod
-    async def connect(cls, ip, port):
-        reader, writer = await asyncio.open_connection(ip, port)
-        return cls(reader, writer)
+        self._conn: IPConnection = IPConnection()
 
-    async def send_command(self, message) -> None:
-        self._writer.write(message.encode("utf-8"))
-        await self._writer.drain()
+        self._ramp_controllers: list[TempRampController] = []
+        for index in range(1, settings.num_ramp_controllers + 1):
+            controller = TempRampController(index, self._conn)
+            self._ramp_controllers.append(controller)
+            self.register(controller)
 
-    async def send_query(self, message) -> str:
-        await self.send_command(message)
-        data = await self._reader.readline()
-        return data.decode("utf-8")
+    async def connect(self, settings: IPConnectionSettings):
+        await self._conn.connect(settings)
 
     async def close(self):
-        self._writer.close()
-        await self._writer.wait_closed()
+        await self._conn.close()
 
 
-class TempRampController(Controller):
+class TempRampController(SubController):
     start: float
     end: float
     current: float
@@ -55,20 +50,11 @@ class TempRampController(Controller):
         FieldInfo("enabled", "N", int),
     )
 
-    def __init__(self, index, conn):
+    def __init__(self, index: int, conn: IPConnection) -> None:
         suffix: str = f"{index:02d}"
         super().__init__(f"ramp{suffix}")
         self._conn: IPConnection = conn
         self._suffix: str = suffix
-
-    @classmethod
-    async def create(cls, index):
-        settings = get_settings()
-        conn = await IPConnection.connect(settings.device_ip, settings.device_port)
-        return cls(index, conn)
-
-    async def close(self):
-        await self._conn.close()
 
     # @scan(0.1)
     async def update(self):
