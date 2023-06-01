@@ -1,3 +1,4 @@
+from asyncio import iscoroutinefunction
 from functools import update_wrapper
 from inspect import Signature, getdoc, signature
 from typing import Any, Callable
@@ -10,6 +11,12 @@ class APIMethod:
         self._fn = fn
         update_wrapper(self, fn)
         self.store_method_details(fn)
+
+        if self._return_type not in (bool, Signature.empty):
+            raise FastCSException("Method return type must be boolean or empty")
+
+        if not iscoroutinefunction(fn):
+            raise FastCSException("Method must be async function")
 
     def store_method_details(self, fn):
         self.help_message = getdoc(fn)
@@ -33,9 +40,6 @@ class ScanMethod(APIMethod):
         super().__init__(fn)
         self._rate = rate
 
-        if self._return_type not in (bool, Signature.empty):
-            raise FastCSException("Scan method return type must be boolean or empty")
-
         if not len(self._parameters) == 1:
             raise FastCSException("Scan method cannot have parameters")
 
@@ -46,9 +50,6 @@ class ScanMethod(APIMethod):
 class PutMethod(APIMethod):
     def __init__(self, fn: Callable) -> None:
         super().__init__(fn)
-
-        if self._return_type not in (bool, Signature.empty):
-            raise FastCSException("Put method return type must be boolean or empty")
 
         if not len(self._parameters) == 2:
             raise FastCSException("Put method can only take one additional argument")
