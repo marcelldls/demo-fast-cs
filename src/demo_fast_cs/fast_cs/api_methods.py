@@ -15,8 +15,13 @@ class APIMethod:
         if self._return_type not in (bool, Signature.empty):
             raise FastCSException("Method return type must be boolean or empty")
 
-        if not iscoroutinefunction(fn):
+        if not iscoroutinefunction(self._fn):
             raise FastCSException("Method must be async function")
+
+        self._bound_instance = None
+
+    def set_bound_instance(self, object):
+        self._bound_instance = object
 
     def store_method_details(self, fn):
         self.help_message = getdoc(fn)
@@ -31,8 +36,9 @@ class APIMethod:
     def get_parameters(self):
         return self._parameters
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        return self._fn(*args, **kwargs)
+
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        return await self._fn(self._bound_instance, *args, **kwargs)
 
 
 class ScanMethod(APIMethod):

@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 
 from .api_methods import APIMethod
-from .controller import Controller, SubController
+from .controller import BaseController, Controller
 
 
 @dataclass
 class SingleMapping:
-    controller: Controller | SubController
+    controller: BaseController
     methods: list[APIMethod]
 
 
@@ -15,7 +15,7 @@ class Mapping:
         self._generate_mapping(controller)
 
     @staticmethod
-    def get_api_methods(controller: Controller | SubController):
+    def get_api_methods(controller: BaseController):
         methods = [getattr(controller, method_name) for method_name in dir(controller)]
         return [method for method in methods if isinstance(method, APIMethod)]
 
