@@ -24,7 +24,7 @@ class APIMethod:
         self._bound_instance = object
 
     def store_method_details(self, fn):
-        self.help_message = getdoc(fn)
+        self._docstring = getdoc(fn)
 
         sig = signature(fn)
         self._parameters = sig.parameters
@@ -36,6 +36,8 @@ class APIMethod:
     def get_parameters(self):
         return self._parameters
 
+    def get_docstring(self):
+        return self._docstring
 
     async def __call__(self, *args: Any, **kwargs: Any) -> Any:
         return await self._fn(self._bound_instance, *args, **kwargs)
