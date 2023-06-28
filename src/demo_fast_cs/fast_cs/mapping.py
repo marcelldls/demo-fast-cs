@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from .api_methods import APIMethod
+from .attributes import Attribute
 from .controller import BaseController, Controller
 
 
@@ -8,6 +9,7 @@ from .controller import BaseController, Controller
 class SingleMapping:
     controller: BaseController
     methods: list[APIMethod]
+    attributes: list[Attribute]
 
 
 class Mapping:
@@ -20,15 +22,27 @@ class Mapping:
         methods = [attr for attr in attrs if isinstance(attr, APIMethod)]
         return methods
 
+    @staticmethod
+    def get_attributes(controller: BaseController):
+        attrs = [getattr(controller, attr_name) for attr_name in dir(controller)]
+        attributes = [attr for attr in attrs if isinstance(attr, Attribute)]
+        return attributes
+
     def _generate_mapping(self, controller: Controller):
         self._controller_mapping = SingleMapping(
-            controller, self.get_api_methods(controller)
+            controller,
+            self.get_api_methods(controller),
+            self.get_attributes(controller),
         )
 
         self._sub_controller_mappings: list[SingleMapping] = []
         for sub_controller in controller.get_sub_controllers():
             self._sub_controller_mappings.append(
-                SingleMapping(sub_controller, self.get_api_methods(sub_controller))
+                SingleMapping(
+                    sub_controller,
+                    self.get_api_methods(sub_controller),
+                    self.get_attributes(sub_controller),
+                )
             )
 
     def __str__(self):
