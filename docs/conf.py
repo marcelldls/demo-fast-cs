@@ -32,6 +32,7 @@ else:
 extensions = [
     # Use this for generating API docs
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     # This can parse google style docstrings
     "sphinx.ext.napoleon",
     # For linking to external sphinx documentation
@@ -48,7 +49,7 @@ extensions = [
 
 # If true, Sphinx will warn about all references where the target cannot
 # be found.
-nitpicky = True
+nitpicky = False
 
 # A list of (type, target) tuples (by default empty) that should be ignored when
 # generating warnings in "nitpicky mode". Note that type should include the
@@ -74,6 +75,11 @@ autodoc_member_order = "bysource"
 
 # Don't inherit docstrings from baseclasses
 autodoc_inherit_docstrings = False
+
+autosummary_generate = True
+
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "_templates"]
 
 # Output graphviz directive produced images in a scalable format
 graphviz_output_format = "svg"
@@ -177,7 +183,6 @@ html_theme_options = dict(
             url=f"https://github.com/{github_user}/{github_repo}/releases",
         )
     ],
-    navigation_depth=2,
 )
 
 # A dictionary of values to pass into the template engine’s context for all pages
