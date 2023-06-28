@@ -15,7 +15,7 @@
                 "${workspaceFolder}/src/demo_fast_cs/simulation/temp_controller.yaml"
             ],
             "purpose": [
-                "debug-demo"
+                "debug-test"
             ],
             "console": "integratedTerminal",
             "env": {
