@@ -2,6 +2,14 @@ API
 ===
 
 .. automodule:: demo_fast_cs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: demo_fast_cs.fast_cs
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
     ``demo_fast_cs``
     -----------------------------------

@@ -1,6 +1,6 @@
-from .controller import Controller, SubController
+from .controller import BaseController, Controller, SubController
 from .mapping import Mapping
 
 # from .wrappers import get, put
 
-__all__ = ["Controller", "SubController", "Mapping"]
+__all__ = ["BaseController", "Controller", "SubController", "Mapping"]

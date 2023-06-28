@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from subprocess import check_output
 
-import requests
+import requests  # type: ignore
 
 import demo_fast_cs
 
@@ -98,7 +98,10 @@ pygments_style = "sphinx"
 
 # This means you can link things like `str` and `asyncio` to the relevant
 # docs in the python documentation.
-intersphinx_mapping = dict(python=("https://docs.python.org/3/", None))
+intersphinx_mapping = dict(
+    python=("https://docs.python.org/3/", None),
+    numpy=("https://numpy.org/doc/stable/", None),
+)
 
 # A dictionary of graphviz graph attributes for inheritance diagrams.
 inheritance_graph_attrs = dict(rankdir="TB")
@@ -174,6 +177,7 @@ html_theme_options = dict(
             url=f"https://github.com/{github_user}/{github_repo}/releases",
         )
     ],
+    navigation_depth=2,
 )
 
 # A dictionary of values to pass into the template engine’s context for all pages
