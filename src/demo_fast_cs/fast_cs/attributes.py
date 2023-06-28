@@ -13,16 +13,22 @@ class Attribute:
         ), f"Attribute type must be one of {ATTRIBUTE_TYPES}, received type {dtype}"
         self._dtype = dtype
 
+    def get(self) -> Any:
+        # TODO: How to best handle these methods which should never get called?
+        return self._dtype()
+
+    def set(self, val: Any) -> None:
+        pass
+
     @property
     def dtype(self):
         return self._dtype
 
 
 class AttributeInstance:
-    def __init__(self, attribute: Attribute, name: str) -> None:
+    def __init__(self, attribute: Attribute) -> None:
         self._attribute = attribute
         self._val = attribute.dtype()
-        self._name = name
 
     def get(self) -> Any:
         return self._val
@@ -33,7 +39,3 @@ class AttributeInstance:
     @property
     def dtype(self):
         return self._attribute.dtype
-
-    @property
-    def name(self):
-        return self._name
