@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import copy
 
 from .api_methods import APIMethod
-from .attributes import Attribute
+from .attributes import Attribute, AttributeInstance
 
 
 class BaseController:
@@ -18,7 +18,7 @@ class BaseController:
                 bound_method.set_bound_instance(self)
                 setattr(self, attr_name, bound_method)
             elif isinstance(attr, Attribute):
-                new_attribute: Attribute = copy(attr)
+                new_attribute = AttributeInstance(attr)
                 setattr(self, attr_name, new_attribute)
 
 

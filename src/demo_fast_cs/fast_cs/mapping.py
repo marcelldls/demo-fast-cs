@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from .api_methods import APIMethod
-from .attributes import Attribute
+from .attributes import AttributeInstance
 from .controller import BaseController, Controller
 
 
@@ -9,7 +9,7 @@ from .controller import BaseController, Controller
 class SingleMapping:
     controller: BaseController
     methods: list[APIMethod]
-    attributes: list[Attribute]
+    attributes: list[AttributeInstance]
 
 
 class Mapping:
@@ -25,7 +25,7 @@ class Mapping:
     @staticmethod
     def get_attributes(controller: BaseController):
         attrs = [getattr(controller, attr_name) for attr_name in dir(controller)]
-        attributes = [attr for attr in attrs if isinstance(attr, Attribute)]
+        attributes = [attr for attr in attrs if isinstance(attr, AttributeInstance)]
         return attributes
 
     def _generate_mapping(self, controller: Controller):
