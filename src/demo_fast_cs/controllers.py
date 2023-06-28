@@ -1,12 +1,22 @@
 import asyncio
 from dataclasses import dataclass
-from typing import NamedTuple, Type
+from typing import NamedTuple, Sequence, cast
 
 from .fast_cs import Controller, SubController
+from .fast_cs.attributes import Attribute
 from .fast_cs.connections import IPConnection, IPConnectionSettings
 from .fast_cs.wrappers import put, scan
 
-FieldInfo = NamedTuple("FieldInfo", (("name", str), ("prefix", str), ("type", Type)))
+AttributeInfo = NamedTuple("AttributeInfo", (("name", str), ("prefix", str)))
+
+
+async def update_values(
+    controller, conn, attr_infos: Sequence[AttributeInfo], suffix: str = ""
+):
+    for info in attr_infos:
+        response = await conn.send_query(f"{info.prefix}{suffix}?\r\n")
+        attr = cast(Attribute, getattr(controller, info.name))
+        attr.set(attr.dtype(response))
 
 
 @dataclass
@@ -15,12 +25,12 @@ class TempControllerSettings:
 
 
 class TempController(Controller):
-    _fields = (FieldInfo("ramp_rate", "R", float),)
+    ramp_rate = Attribute(float)
 
-    def __init__(self, settings: TempControllerSettings):
+    _attributes = (AttributeInfo("ramp_rate", "R"),)
+
+    def __init__(self, settings: TempControllerSettings) -> None:
         super().__init__()
-
-        self.ramp_rate: float = 0
 
         self._conn: IPConnection = IPConnection()
 
@@ -31,14 +41,12 @@ class TempController(Controller):
             self.register_sub_controller(controller)
 
     @put
-    async def put_ramp_rate(self, value: float):
+    async def put_ramp_rate(self, value: float) -> None:
         await self._conn.send_command(f"R={value}\r\n")
 
     @scan(0.1)
-    async def update(self):
-        for field in self._fields:
-            response = await self._conn.send_query(f"{field.prefix}?\r\n")
-            setattr(self, field.name, field.type(response))
+    async def update(self) -> None:
+        await update_values(self, self._conn, self._attributes)
 
     async def connect(self, settings: IPConnectionSettings):
         await self._conn.connect(settings)
@@ -48,11 +56,16 @@ class TempController(Controller):
 
 
 class TempRampController(SubController):
-    _fields = (
-        FieldInfo("start", "S", float),
-        FieldInfo("end", "E", float),
-        FieldInfo("current", "T", float),
-        FieldInfo("enabled", "N", int),
+    start = Attribute(float)
+    end = Attribute(float)
+    current = Attribute(float)
+    enabled = Attribute(int)
+
+    _attributes = (
+        AttributeInfo("start", "S"),
+        AttributeInfo("end", "E"),
+        AttributeInfo("current", "T"),
+        AttributeInfo("enabled", "N"),
     )
 
     def __init__(self, index: int, conn: IPConnection) -> None:
@@ -61,36 +74,29 @@ class TempRampController(SubController):
         self._conn: IPConnection = conn
         self._suffix: str = suffix
 
-        self.start: float = 0
-        self.end: float = 0
-        self.current: float = 0
-        self.enabled: int = 0
-
     @scan(0.1)
-    async def update(self):
-        for field in self._fields:
-            response = await self._conn.send_query(f"{field.prefix}{self._suffix}?\r\n")
-            setattr(self, field.name, field.type(response))
+    async def update(self) -> None:
+        await update_values(self, self._conn, self._attributes, self._suffix)
 
-        print(f"Start: {self.start}")
-        print(f"End: {self.end}")
-        print(f"Current: {self.current}")
-        print(f"Enabled: {self.enabled}")
+        print(f"Start: {self.start.get()}")
+        print(f"End: {self.end.get()}")
+        print(f"Current: {self.current.get()}")
+        print(f"Enabled: {self.enabled.get()}")
 
     @put
-    async def put_enabled(self, value: int):
+    async def put_enabled(self, value: int) -> None:
         await self._conn.send_command(f"N{self._suffix}={value}\r\n")
 
     @put
-    async def put_start(self, value: float):
+    async def put_start(self, value: float) -> None:
         await self._conn.send_command(f"S{self._suffix}={value}\r\n")
 
     @put
-    async def put_end(self, value: float):
+    async def put_end(self, value: float) -> None:
         await self._conn.send_command(f"E{self._suffix}={value}\r\n")
 
     @put
-    async def put_current(self, value: float):
+    async def put_current(self, value: float) -> None:
         await self._conn.send_command(f"T{self._suffix}={value}\r\n")
 
 

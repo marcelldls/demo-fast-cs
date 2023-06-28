@@ -12,7 +12,7 @@ class APIMethod:
         update_wrapper(self, fn)
         self.store_method_details(fn)
 
-        if self._return_type not in (bool, Signature.empty):
+        if self._return_type not in (bool, None, Signature.empty):
             raise FastCSException("Method return type must be boolean or empty")
 
         if not iscoroutinefunction(self._fn):
