@@ -1,15 +1,21 @@
 from dataclasses import dataclass
+from typing import NamedTuple
 
 from .api_methods import APIMethod
 from .attributes import AttributeInstance
 from .controller import BaseController, Controller
 
+MethodData = NamedTuple("MethodData", (("name", str), ("method", APIMethod)))
+AttributeData = NamedTuple(
+    "AttributeData", (("name", str), ("attribute", AttributeInstance))
+)
+
 
 @dataclass
 class SingleMapping:
     controller: BaseController
-    methods: list[APIMethod]
-    attributes: list[AttributeInstance]
+    methods: list[MethodData]
+    attributes: list[AttributeData]
 
 
 class Mapping:
@@ -17,32 +23,25 @@ class Mapping:
         self._generate_mapping(controller)
 
     @staticmethod
-    def get_api_methods(controller: BaseController):
-        attrs = [getattr(controller, attr) for attr in dir(controller)]
-        methods = [attr for attr in attrs if isinstance(attr, APIMethod)]
-        return methods
+    def _get_single_mapping(controller: BaseController) -> SingleMapping:
+        methods = []
+        attributes = []
+        for attr_name in dir(controller):
+            attr = getattr(controller, attr_name)
+            if isinstance(attr, APIMethod):
+                methods.append(MethodData(attr_name, attr))
+            elif isinstance(attr, AttributeInstance):
+                attributes.append(AttributeData(attr_name, attr))
 
-    @staticmethod
-    def get_attributes(controller: BaseController):
-        attrs = [getattr(controller, attr_name) for attr_name in dir(controller)]
-        attributes = [attr for attr in attrs if isinstance(attr, AttributeInstance)]
-        return attributes
+        return SingleMapping(controller, methods, attributes)
 
     def _generate_mapping(self, controller: Controller):
-        self._controller_mapping = SingleMapping(
-            controller,
-            self.get_api_methods(controller),
-            self.get_attributes(controller),
-        )
+        self._controller_mapping = self._get_single_mapping(controller)
 
         self._sub_controller_mappings: list[SingleMapping] = []
         for sub_controller in controller.get_sub_controllers():
             self._sub_controller_mappings.append(
-                SingleMapping(
-                    sub_controller,
-                    self.get_api_methods(sub_controller),
-                    self.get_attributes(sub_controller),
-                )
+                self._get_single_mapping(sub_controller)
             )
 
     def __str__(self):
