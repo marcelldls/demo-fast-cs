@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import dataclass
 from typing import NamedTuple, Sequence, cast
 
@@ -98,22 +97,3 @@ class TempRampController(SubController):
     @put
     async def put_current(self, value: float) -> None:
         await self._conn.send_command(f"T{self._suffix}={value}\r\n")
-
-
-async def run_controller():
-    tcont = await TempRampController.create(2)
-
-    await tcont.update()
-    await asyncio.sleep(1)
-    await tcont.set_enabled(1)
-    await asyncio.sleep(3)
-    await tcont.update()
-    await asyncio.sleep(3)
-    await tcont.update()
-    await tcont.set_enabled(0)
-    await tcont.update()
-    await tcont.close()
-
-
-def main():
-    asyncio.run(run_controller())
