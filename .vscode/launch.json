@@ -41,6 +41,12 @@
                 // https://github.com/microsoft/vscode-python/issues/693
                 "PYTEST_ADDOPTS": "--no-cov"
             },
-        }
+        },
+        {
+            "name": "Open in Firefox",
+            "command": "firefox ${file}; exit",
+            "request": "launch",
+            "type": "node-terminal"
+        },
     ]
 }
