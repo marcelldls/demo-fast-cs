@@ -16,8 +16,9 @@ class Mapping:
 
     @staticmethod
     def get_api_methods(controller: BaseController):
-        methods = [getattr(controller, method_name) for method_name in dir(controller)]
-        return [method for method in methods if isinstance(method, APIMethod)]
+        attrs = [getattr(controller, attr) for attr in dir(controller)]
+        methods = [attr for attr in attrs if isinstance(attr, APIMethod)]
+        return methods
 
     def _generate_mapping(self, controller: Controller):
         self._controller_mapping = SingleMapping(

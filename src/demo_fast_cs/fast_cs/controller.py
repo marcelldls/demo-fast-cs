@@ -18,8 +18,8 @@ class BaseController:
                 bound_method.set_bound_instance(self)
                 setattr(self, attr_name, bound_method)
             elif isinstance(attr, Attribute):
-                new_attr: Attribute = copy(attr)
-                setattr(self, attr_name, new_attr)
+                new_attribute: Attribute = copy(attr)
+                setattr(self, attr_name, new_attribute)
 
 
 class Controller(BaseController):
