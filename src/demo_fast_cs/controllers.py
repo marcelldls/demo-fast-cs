@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import NamedTuple, Sequence, cast
 
 from .fast_cs import Controller, SubController
-from .fast_cs.attributes import Attribute, AttributeInstance
+from .fast_cs.attributes import Attribute
 from .fast_cs.connections import IPConnection, IPConnectionSettings
 from .fast_cs.wrappers import put, scan
 
@@ -14,8 +14,8 @@ async def update_values(
 ):
     for info in attr_infos:
         response = await conn.send_query(f"{info.prefix}{suffix}?\r\n")
-        attr = cast(AttributeInstance, getattr(controller, info.name))
-        attr.set(attr.dtype(response))
+        attr = cast(Attribute, getattr(controller, info.name))
+        attr.set(response)
 
 
 @dataclass

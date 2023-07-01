@@ -2,13 +2,11 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from .api_methods import APIMethod
-from .attributes import AttributeInstance
+from .attributes import Attribute
 from .controller import BaseController, Controller
 
 MethodData = NamedTuple("MethodData", (("name", str), ("method", APIMethod)))
-AttributeData = NamedTuple(
-    "AttributeData", (("name", str), ("attribute", AttributeInstance))
-)
+AttributeData = NamedTuple("AttributeData", (("name", str), ("attribute", Attribute)))
 
 
 @dataclass
@@ -30,7 +28,7 @@ class Mapping:
             attr = getattr(controller, attr_name)
             if isinstance(attr, APIMethod):
                 methods.append(MethodData(attr_name, attr))
-            elif isinstance(attr, AttributeInstance):
+            elif isinstance(attr, Attribute):
                 attributes.append(AttributeData(attr_name, attr))
 
         return SingleMapping(controller, methods, attributes)
