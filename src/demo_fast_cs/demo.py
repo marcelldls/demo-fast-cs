@@ -6,6 +6,8 @@ from demo_fast_cs.controllers import (
     TempControllerSettings,
 )
 
+from .fast_cs.mapping import Mapping
+
 
 def get_controller() -> TempController:
     settings = TempControllerSettings(4)
@@ -35,6 +37,13 @@ async def run_controller():
     # await tcont.set_enabled(0)
     # await tcont.update()
     # await tcont.close()
+
+
+def test_mapping():
+    tcont = get_controller()
+    m = Mapping(tcont)
+
+    print(str(m))
 
 
 def main():
