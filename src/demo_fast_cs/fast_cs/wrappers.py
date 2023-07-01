@@ -1,7 +1,6 @@
-from typing import Any, Callable, Protocol, TypeAlias
+from typing import Any
 
-from .attributes import AttrCallback
-from .cs_methods import MethodInfo, MethodType, ScanCallback
+from .cs_methods import MethodInfo, MethodType
 from .exceptions import FastCSException
 
 

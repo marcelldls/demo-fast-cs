@@ -1,10 +1,8 @@
 from asyncio import iscoroutinefunction
 from enum import Enum
-from functools import update_wrapper
 from inspect import Signature, getdoc, signature
-from typing import Any, Awaitable, Callable, Literal, TypeAlias
+from typing import Awaitable, Callable, TypeAlias
 
-from .attributes import AttrCallback
 from .exceptions import FastCSException
 
 ScanCallback: TypeAlias = Callable[..., Awaitable[None]]
