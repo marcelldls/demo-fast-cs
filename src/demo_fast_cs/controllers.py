@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import NamedTuple, Sequence, cast
 
 from .fast_cs import Controller, SubController
-from .fast_cs.attributes import Attribute
+from .fast_cs.attributes import AttrRead, AttrReadWrite
 from .fast_cs.connections import IPConnection, IPConnectionSettings
 from .fast_cs.wrappers import put, scan
 
@@ -14,8 +14,8 @@ async def update_values(
 ):
     for info in attr_infos:
         response = await conn.send_query(f"{info.prefix}{suffix}?\r\n")
-        attr = cast(Attribute, getattr(controller, info.name))
-        attr.set(response)
+        attr = cast(AttrRead, getattr(controller, info.name))
+        await attr.set(response)
 
 
 @dataclass
@@ -24,7 +24,7 @@ class TempControllerSettings:
 
 
 class TempController(Controller):
-    ramp_rate = Attribute(float)
+    ramp_rate = AttrReadWrite(float)
 
     _attributes = (AttributeInfo("ramp_rate", "R"),)
 
@@ -55,10 +55,10 @@ class TempController(Controller):
 
 
 class TempRampController(SubController):
-    start = Attribute(float)
-    end = Attribute(float)
-    current = Attribute(float)
-    enabled = Attribute(int)
+    start = AttrReadWrite(float)
+    end = AttrReadWrite(float)
+    current = AttrRead(float)
+    enabled = AttrReadWrite(int)
 
     _attributes = (
         AttributeInfo("start", "S"),

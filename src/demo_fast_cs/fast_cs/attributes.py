@@ -25,7 +25,7 @@ class Attribute(Generic[T]):
 
 class AttrRead(Attribute[T]):
     def __init__(self, dtype: type[T]) -> None:
-        super(AttrRead, self).__init__(dtype)
+        super().__init__(dtype)  # type: ignore
         self._value: T = dtype()
         self._update_callback: Optional[AttrCallback[T]] = None
 
@@ -46,7 +46,7 @@ class AttrRead(Attribute[T]):
 
 class AttrWrite(Attribute[T]):
     def __init__(self, dtype: type[T]) -> None:
-        super(AttrWrite, self).__init__(dtype)
+        super().__init__(dtype)  # type: ignore
         self._process_callback: Optional[AttrCallback[T]] = None
 
     async def process(self, value: T) -> None:
@@ -61,9 +61,9 @@ class AttrWrite(Attribute[T]):
 
 class AttrReadWrite(AttrWrite[T], AttrRead[T]):
     def __init__(self, dtype: type[T]) -> None:
-        super(AttrReadWrite, self).__init__(dtype)
+        super().__init__(dtype)  # type: ignore
 
     async def process(self, value: T) -> None:
         await self.set(value)
 
-        await super(AttrReadWrite, self).process(value)
+        await super().process(value)  # type: ignore

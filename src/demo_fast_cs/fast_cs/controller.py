@@ -18,7 +18,7 @@ class BaseController:
                 bound_method.set_bound_instance(self)
                 setattr(self, attr_name, bound_method)
             elif isinstance(attr, Attribute):
-                new_attribute = Attribute(attr.dtype)
+                new_attribute = copy(attr)
                 setattr(self, attr_name, new_attribute)
 
 
