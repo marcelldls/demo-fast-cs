@@ -16,7 +16,7 @@ def get_controller() -> TempController:
     return tcont
 
 
-async def run_controller():
+async def run_controller() -> None:
     tcont = get_controller()
     await tcont.connect()
     print(f"Initial ramp rate: {tcont.ramp_rate.get()}")
@@ -39,12 +39,12 @@ async def run_controller():
     # await tcont.close()
 
 
-def test_mapping():
+def test_mapping() -> None:
     tcont = get_controller()
     m = Mapping(tcont)
 
     print(str(m))
 
 
-def main():
+def main() -> None:
     asyncio.run(run_controller())

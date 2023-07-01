@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import NamedTuple, Sequence, cast
 
-from .fast_cs import Controller, SubController
+from .fast_cs import BaseController, Controller, SubController
 from .fast_cs.attributes import AttrRead, AttrReadWrite
 from .fast_cs.connections import IPConnection, IPConnectionSettings
 from .fast_cs.wrappers import put, scan
@@ -10,8 +10,11 @@ AttributeInfo = NamedTuple("AttributeInfo", (("name", str), ("prefix", str)))
 
 
 async def update_values(
-    controller, conn, attr_infos: Sequence[AttributeInfo], suffix: str = ""
-):
+    controller: BaseController,
+    conn: IPConnection,
+    attr_infos: Sequence[AttributeInfo],
+    suffix: str = "",
+) -> None:
     for info in attr_infos:
         response = await conn.send_query(f"{info.prefix}{suffix}?\r\n")
         attr = cast(AttrRead, getattr(controller, info.name))
@@ -49,10 +52,10 @@ class TempController(Controller):
     async def update(self) -> None:
         await update_values(self, self._conn, self._attributes)
 
-    async def connect(self):
+    async def connect(self) -> None:
         await self._conn.connect(self._settings.ip_settings)
 
-    async def close(self):
+    async def close(self) -> None:
         await self._conn.close()
 
 
@@ -70,10 +73,10 @@ class TempRampController(SubController):
     )
 
     def __init__(self, index: int, conn: IPConnection) -> None:
-        suffix: str = f"{index:02d}"
+        suffix = f"{index:02d}"
         super().__init__(f"ramp{suffix}")
-        self._conn: IPConnection = conn
-        self._suffix: str = suffix
+        self._conn = conn
+        self._suffix = suffix
 
     @scan(0.1)
     async def update(self) -> None:
