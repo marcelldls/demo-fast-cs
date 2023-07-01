@@ -1,11 +1,13 @@
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import Callable, NamedTuple
 
-from .api_methods import APIMethod
 from .attributes import Attribute
 from .controller import BaseController, Controller
+from .cs_methods import MethodInfo
 
-MethodData = NamedTuple("MethodData", (("name", str), ("method", APIMethod)))
+MethodData = NamedTuple(
+    "MethodData", (("name", str), ("info", MethodInfo), ("method", Callable))
+)
 AttributeData = NamedTuple("AttributeData", (("name", str), ("attribute", Attribute)))
 
 
@@ -26,8 +28,8 @@ class Mapping:
         attributes = []
         for attr_name in dir(controller):
             attr = getattr(controller, attr_name)
-            if isinstance(attr, APIMethod):
-                methods.append(MethodData(attr_name, attr))
+            if hasattr(attr, "fastcs_method_info"):
+                methods.append(MethodData(attr_name, attr.fastcs_method_info, attr))
             elif isinstance(attr, Attribute):
                 attributes.append(AttributeData(attr_name, attr))
 

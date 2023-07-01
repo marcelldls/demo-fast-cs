@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from copy import copy
 
-from .api_methods import APIMethod
 from .attributes import Attribute
 
 
@@ -13,11 +12,7 @@ class BaseController:
     def _bind_attrs(self) -> None:
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
-            if isinstance(attr, APIMethod):
-                bound_method: APIMethod = copy(attr)
-                bound_method.set_bound_instance(self)
-                setattr(self, attr_name, bound_method)
-            elif isinstance(attr, Attribute):
+            if isinstance(attr, Attribute):
                 new_attribute = copy(attr)
                 setattr(self, attr_name, new_attribute)
 
