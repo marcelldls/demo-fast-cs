@@ -10,15 +10,15 @@ from .fast_cs.mapping import Mapping
 
 
 def get_controller() -> TempController:
-    settings = TempControllerSettings(4)
+    ip_settings = IPConnectionSettings()
+    settings = TempControllerSettings(4, ip_settings)
     tcont = TempController(settings)
     return tcont
 
 
 async def run_controller():
     tcont = get_controller()
-    ip_settings = IPConnectionSettings()
-    await tcont.connect(ip_settings)
+    await tcont.connect()
     print(f"Initial ramp rate: {tcont.ramp_rate.get()}")
     await tcont.update()
     print(f"Starting ramp rate: {tcont.ramp_rate.get()}")

@@ -21,6 +21,7 @@ async def update_values(
 @dataclass
 class TempControllerSettings:
     num_ramp_controllers: int
+    ip_settings: IPConnectionSettings
 
 
 class TempController(Controller):
@@ -31,7 +32,8 @@ class TempController(Controller):
     def __init__(self, settings: TempControllerSettings) -> None:
         super().__init__()
 
-        self._conn: IPConnection = IPConnection()
+        self._settings = settings
+        self._conn = IPConnection()
 
         self._ramp_controllers: list[TempRampController] = []
         for index in range(1, settings.num_ramp_controllers + 1):
@@ -47,8 +49,8 @@ class TempController(Controller):
     async def update(self) -> None:
         await update_values(self, self._conn, self._attributes)
 
-    async def connect(self, settings: IPConnectionSettings):
-        await self._conn.connect(settings)
+    async def connect(self):
+        await self._conn.connect(self._settings.ip_settings)
 
     async def close(self):
         await self._conn.close()
