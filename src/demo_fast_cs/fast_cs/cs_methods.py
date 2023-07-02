@@ -51,6 +51,10 @@ class MethodInfo:
         self._return_type = sig.return_annotation
 
     @property
+    def type(self):
+        return self._type
+
+    @property
     def return_type(self):
         return self._return_type
 
