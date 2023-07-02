@@ -119,33 +119,45 @@ class TempControllerAdapter(ComposedAdapter):
             # CommandInterpreter(),
         )
 
+    def _validate_index(self, index: str) -> int:
+        int_index = int(index) - 1
+        assert int_index >= 0, "TempController Indices start at 01"
+        return int_index
+
     @RegexCommand(r"T([0-9][0-9])\?", False, "utf-8")
     async def get_temperature(self, index: str) -> bytes:
-        return str(self.device.get_temps(int(index) - 1)).encode("utf-8")
+        int_index = self._validate_index(index)
+        return str(self.device.get_temps(int_index)).encode("utf-8")
 
     @RegexCommand(r"N([0-9][0-9])\?", False, "utf-8")
     async def get_enabled(self, index: str) -> bytes:
-        return str(self.device.get_enabled(int(index) - 1)).encode("utf-8")
+        int_index = self._validate_index(index)
+        return str(self.device.get_enabled(int_index)).encode("utf-8")
 
     @RegexCommand(r"N([0-9][0-9])=([01])", True, "utf-8")
     async def set_enabled(self, index: str, value: int) -> None:
-        self.device.set_enabled(int(index) - 1, value)
+        int_index = self._validate_index(index)
+        self.device.set_enabled(int_index, value)
 
     @RegexCommand(r"S([0-9][0-9])\?", False, "utf-8")
     async def get_start(self, index: str) -> bytes:
-        return str(self.device.get_start(int(index) - 1)).encode("utf-8")
+        int_index = self._validate_index(index)
+        return str(self.device.get_start(int_index)).encode("utf-8")
 
     @RegexCommand(r"S([0-9][0-9])=(\d+\.?\d*)", True, "utf-8")
     async def set_start(self, index: str, value: str) -> None:
-        self.device.set_start(int(index) - 1, float(value))
+        int_index = self._validate_index(index)
+        self.device.set_start(int_index, float(value))
 
     @RegexCommand(r"E([0-9][0-9])\?", False, "utf-8")
     async def get_end(self, index: str) -> bytes:
-        return str(self.device.get_end(int(index) - 1)).encode("utf-8")
+        int_index = self._validate_index(index)
+        return str(self.device.get_end(int_index)).encode("utf-8")
 
     @RegexCommand(r"E([0-9][0-9])=(\d+\.?\d*)", True, "utf-8")
     async def set_end(self, index: str, value: str) -> None:
-        self.device.set_end(int(index) - 1, float(value))
+        int_index = self._validate_index(index)
+        self.device.set_end(int_index, float(value))
 
     @RegexCommand(r"R\?", False, "utf-8")
     async def get_ramp_rate(self) -> bytes:
