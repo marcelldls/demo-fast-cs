@@ -14,10 +14,10 @@ class MethodType(Enum):
 
 
 class MethodInfo:
-    def __init__(self, type: MethodType, fn: Callable, **kwargs) -> None:
-        self._type = type
+    def __init__(self, method_type: MethodType, fn: Callable, **kwargs) -> None:
+        self._method_type = method_type
         self._store_method_details(fn)
-        self._validate_method(type, fn)
+        self._validate_method(method_type, fn)
 
         self.kwargs = kwargs
 
@@ -51,8 +51,8 @@ class MethodInfo:
         self._return_type = sig.return_annotation
 
     @property
-    def type(self):
-        return self._type
+    def method_type(self):
+        return self._method_type
 
     @property
     def return_type(self):
