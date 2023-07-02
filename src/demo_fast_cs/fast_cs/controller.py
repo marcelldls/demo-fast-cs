@@ -22,6 +22,9 @@ class Controller(BaseController):
         super().__init__()
         self.__sub_controllers: list[SubController] = []
 
+    async def connect(self) -> None:
+        pass
+
     def register_sub_controller(self, controller: SubController):
         self.__sub_controllers.append(controller)
 
