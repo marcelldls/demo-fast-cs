@@ -82,11 +82,6 @@ class TempRampController(SubController):
     async def update(self) -> None:
         await update_values(self, self._conn, self._attributes, self._suffix)
 
-        print(f"Start: {self.start.get()}")
-        print(f"End: {self.end.get()}")
-        print(f"Current: {self.current.get()}")
-        print(f"Enabled: {self.enabled.get()}")
-
     @put
     async def put_enabled(self, value: int) -> None:
         await self._conn.send_command(f"N{self._suffix}={value}\r\n")
