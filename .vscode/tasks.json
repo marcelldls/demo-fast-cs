@@ -21,5 +21,33 @@
             },
             "problemMatcher": [],
         },
+        {
+            "type": "process",
+            "label": "Run simulation",
+            "command": "./.venv/bin/python",
+            "args": [
+                "-m",
+                "tickit",
+                "all",
+                "./src/demo_fast_cs/simulation/temp_controller.yaml",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+        },
+        {
+            "type": "process",
+            "label": "Connect to simulation",
+            "command": "nc",
+            "args": [
+                "localhost",
+                "25565",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+        },
     ]
 }
