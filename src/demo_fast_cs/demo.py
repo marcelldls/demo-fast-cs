@@ -6,6 +6,7 @@ from demo_fast_cs.controllers import (
     TempControllerSettings,
 )
 
+from .epics.backend import EpicsBackend
 from .fast_cs.mapping import Mapping
 
 
@@ -44,6 +45,29 @@ def test_mapping() -> None:
     m = Mapping(tcont)
 
     print(str(m))
+
+
+def create_docs() -> None:
+    tcont = get_controller()
+    m = Mapping(tcont)
+    backend = EpicsBackend(m)
+    backend.create_docs()
+
+
+def create_gui() -> None:
+    tcont = get_controller()
+    m = Mapping(tcont)
+    backend = EpicsBackend(m)
+    backend.create_gui()
+
+
+async def test_ioc() -> None:
+    tcont = get_controller()
+    m = Mapping(tcont)
+    backend = EpicsBackend(m)
+    ioc = backend.get_ioc()
+
+    await ioc.run()
 
 
 def main() -> None:
