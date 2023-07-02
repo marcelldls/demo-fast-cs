@@ -19,7 +19,8 @@ class SingleMapping:
 
 
 class Mapping:
-    def __init__(self, controller: Controller):
+    def __init__(self, controller: Controller) -> None:
+        self.controller = controller
         self._generate_mapping(controller)
 
     @staticmethod
@@ -35,24 +36,17 @@ class Mapping:
 
         return SingleMapping(controller, methods, attributes)
 
-    def _generate_mapping(self, controller: Controller):
-        self._controller_mapping = self._get_single_mapping(controller)
-
-        self._sub_controller_mappings: list[SingleMapping] = []
+    def _generate_mapping(self, controller: Controller) -> None:
+        self._controller_mappings: list[SingleMapping] = []
+        self._controller_mappings.append(self._get_single_mapping(controller))
         for sub_controller in controller.get_sub_controllers():
-            self._sub_controller_mappings.append(
-                self._get_single_mapping(sub_controller)
-            )
+            self._controller_mappings.append(self._get_single_mapping(sub_controller))
 
-    def __str__(self):
-        result = f"Top-level mapping: {self._controller_mapping}\n"
-        result += "Sub-controller mappings:\n"
-        for sub_mapping in self._sub_controller_mappings:
-            result += f"{sub_mapping}\n"
+    def __str__(self) -> str:
+        result = "Controller mappings:\n"
+        for mapping in self._controller_mappings:
+            result += f"{mapping}\n"
         return result
 
-    def get_controller_mapping(self):
-        return self._controller_mapping
-
-    def get_sub_controller_mappings(self):
-        return self._sub_controller_mappings
+    def get_controller_mappings(self) -> list[SingleMapping]:
+        return self._controller_mappings
