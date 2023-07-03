@@ -7,6 +7,7 @@ from demo_fast_cs.controllers import (
 )
 
 from .epics.backend import EpicsBackend
+from .fast_cs.asyncio_backend import AsyncioBackend
 from .fast_cs.mapping import Mapping
 
 
@@ -70,5 +71,13 @@ async def test_ioc() -> None:
     await ioc.run()
 
 
+def test_asyncio_backend() -> None:
+    tcont = get_controller()
+    m = Mapping(tcont)
+    backend = AsyncioBackend(m)
+    backend.run_interactive_session()
+
+
 def main() -> None:
-    asyncio.run(run_controller())
+    # asyncio.run(test_ip_conn())
+    test_asyncio_backend()
