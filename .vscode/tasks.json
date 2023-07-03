@@ -24,7 +24,7 @@
         {
             "type": "process",
             "label": "Run simulation",
-            "command": "./.venv/bin/python",
+            "command": "python",
             "args": [
                 "-m",
                 "tickit",
