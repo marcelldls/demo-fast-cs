@@ -35,8 +35,8 @@ def handle_exceptions(func):
 
 
 class TempControllerDevice(Device):
-    Inputs: TypedDict = TypedDict("Inputs", {"flux": float})
-    Outputs: TypedDict = TypedDict("Outputs", {"flux": float})
+    Inputs: type = TypedDict("Inputs", {"flux": float})
+    Outputs: type = TypedDict("Outputs", {"flux": float})
 
     def __init__(
         self,
