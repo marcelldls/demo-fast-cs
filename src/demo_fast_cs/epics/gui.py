@@ -95,4 +95,4 @@ class EpicsGUI:
 
         device = Device("Simple Device", children=components)
 
-        formatter.format(device, "$(P)", options.output_path)
+        formatter.format(device, "MY-DEVICE-PREFIX", options.output_path)
