@@ -93,7 +93,3 @@ class TempRampController(SubController):
     @put
     async def put_end(self, value: float) -> None:
         await self._conn.send_command(f"E{self._suffix}={value}\r\n")
-
-    @put
-    async def put_current(self, value: float) -> None:
-        await self._conn.send_command(f"T{self._suffix}={value}\r\n")
