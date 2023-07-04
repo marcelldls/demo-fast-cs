@@ -1,4 +1,3 @@
-import logging as log
 from typing import Awaitable, Callable, Generic, Optional, TypeAlias, TypeVar
 
 ATTRIBUTE_TYPES = (
@@ -37,8 +36,6 @@ class AttrRead(Attribute[T]):
 
         if self._update_callback is not None:
             await self._update_callback(value)
-        else:
-            log.warning(f"Update callback is not set for {self}")
 
     def set_update_callback(self, callback: Optional[AttrCallback[T]]) -> None:
         self._update_callback = callback
@@ -52,8 +49,6 @@ class AttrWrite(Attribute[T]):
     async def process(self, value: T) -> None:
         if self._process_callback is not None:
             await self._process_callback(self._dtype(value))
-        else:
-            log.warning(f"Process callback is not set for {self}")
 
     def set_process_callback(self, callback: Optional[AttrCallback[T]]) -> None:
         self._process_callback = callback

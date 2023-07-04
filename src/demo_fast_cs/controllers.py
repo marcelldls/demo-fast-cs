@@ -48,7 +48,7 @@ class TempController(Controller):
     async def put_ramp_rate(self, value: float) -> None:
         await self._conn.send_command(f"R={value}\r\n")
 
-    @scan(0.1)
+    @scan(0.2)
     async def update(self) -> None:
         await update_values(self, self._conn, self._attributes)
 
@@ -78,7 +78,7 @@ class TempRampController(SubController):
         self._conn = conn
         self._suffix = suffix
 
-    @scan(0.1)
+    @scan(0.2)
     async def update(self) -> None:
         await update_values(self, self._conn, self._attributes, self._suffix)
 
