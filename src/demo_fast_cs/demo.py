@@ -60,13 +60,13 @@ def create_gui() -> None:
     backend.create_gui()
 
 
-async def test_ioc() -> None:
+def test_ioc() -> None:
     tcont = get_controller()
     m = Mapping(tcont)
     backend = EpicsBackend(m)
     ioc = backend.get_ioc()
 
-    await ioc.run()
+    ioc.run()
 
 
 def test_asyncio_backend() -> None:
@@ -78,5 +78,6 @@ def test_asyncio_backend() -> None:
 
 def main() -> None:
     # asyncio.run(test_ip_conn())
-    test_asyncio_backend()
+    # test_asyncio_backend()
     # create_gui()
+    test_ioc()

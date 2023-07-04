@@ -36,7 +36,7 @@ def get_scan_tasks(mapping: Mapping) -> list[Callable]:
     return methods
 
 
-def link_single_controller_process_tasks(single_mapping: SingleMapping):
+def _link_single_controller_process_tasks(single_mapping: SingleMapping):
     put_methods = [
         method_data
         for method_data in single_mapping.methods
@@ -59,8 +59,5 @@ def link_single_controller_process_tasks(single_mapping: SingleMapping):
 
 def link_process_tasks(mapping: Mapping) -> None:
     for single_mapping in mapping.get_controller_mappings():
-        link_single_controller_process_tasks(single_mapping)
+        _link_single_controller_process_tasks(single_mapping)
 
-
-# def link_attribute_updates(mapping: Mapping, gen: CSAttributeGenerator) -> None:
-#     pass
