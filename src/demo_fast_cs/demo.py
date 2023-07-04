@@ -78,5 +78,5 @@ def test_asyncio_backend() -> None:
 
 def main() -> None:
     # asyncio.run(test_ip_conn())
-    # test_asyncio_backend()
-    create_gui()
+    test_asyncio_backend()
+    # create_gui()

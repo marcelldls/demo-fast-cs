@@ -2,7 +2,7 @@ import asyncio
 
 from softioc import asyncio_dispatcher, softioc
 
-from .backend import get_initial_tasks, get_scan_tasks
+from .backend import get_initial_tasks, get_scan_tasks, link_process_tasks
 from .mapping import Mapping
 
 
@@ -13,6 +13,8 @@ class AsyncioBackend:
     def run_interactive_session(self):
         # Create an asyncio dispatcher; the event loop is now running
         dispatcher = asyncio_dispatcher.AsyncioDispatcher()
+
+        link_process_tasks(self._mapping)
 
         initial_tasks = get_initial_tasks(self._mapping)
 

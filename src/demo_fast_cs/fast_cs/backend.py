@@ -1,8 +1,9 @@
 import asyncio
-from typing import Callable
+from typing import Callable, cast
 
+from .attributes import AttrCallback, AttrMode, AttrWrite
 from .cs_methods import MethodType
-from .mapping import Mapping, MethodData
+from .mapping import Mapping, MethodData, SingleMapping
 
 
 def get_initial_tasks(mapping: Mapping) -> list[Callable]:
@@ -35,8 +36,30 @@ def get_scan_tasks(mapping: Mapping) -> list[Callable]:
     return methods
 
 
-def link_attribute_processing(mapping: Mapping) -> None:
-    pass
+def link_single_controller_process_tasks(single_mapping: SingleMapping):
+    put_methods = [
+        method_data
+        for method_data in single_mapping.methods
+        if method_data.info.method_type == MethodType.put
+    ]
+
+    for method_data in put_methods:
+        method = cast(AttrCallback, method_data.method)
+        name = method_data.name.removeprefix("put_")
+
+        attribute = single_mapping.attributes[name]
+        assert attribute.mode in [
+            AttrMode.WRITE,
+            AttrMode.READ_WRITE,
+        ], f"Mode {attribute.mode} does not support put operations for {name}"
+        attribute = cast(AttrWrite, attribute)
+
+        attribute.set_process_callback(method)
+
+
+def link_process_tasks(mapping: Mapping) -> None:
+    for single_mapping in mapping.get_controller_mappings():
+        link_single_controller_process_tasks(single_mapping)
 
 
 # def link_attribute_updates(mapping: Mapping, gen: CSAttributeGenerator) -> None:
