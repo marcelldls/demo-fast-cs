@@ -167,7 +167,7 @@ class TempControllerAdapter(ComposedAdapter):
     async def set_ramp_rate(self, value: str) -> None:
         self.device.set_ramp_rate(float(value))
 
-    @RegexCommand(r"\w*", True, "utf-8")
+    @RegexCommand(r"\w*", False, "utf-8")
     async def ignore_whitespace(self) -> None:
         pass
 
