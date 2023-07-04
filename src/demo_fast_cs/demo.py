@@ -1,5 +1,3 @@
-import asyncio
-
 from demo_fast_cs.controllers import (
     IPConnectionSettings,
     TempController,
@@ -80,4 +78,5 @@ def test_asyncio_backend() -> None:
 
 def main() -> None:
     # asyncio.run(test_ip_conn())
-    test_asyncio_backend()
+    # test_asyncio_backend()
+    create_gui()

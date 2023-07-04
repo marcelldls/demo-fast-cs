@@ -6,8 +6,13 @@ from .attributes import Attribute
 
 
 class BaseController:
-    def __init__(self) -> None:
+    def __init__(self, path="") -> None:
+        self._path: str = path
         self._bind_attrs()
+
+    @property
+    def path(self):
+        return self._path
 
     def _bind_attrs(self) -> None:
         for attr_name in dir(self):
@@ -34,5 +39,4 @@ class Controller(BaseController):
 
 class SubController(BaseController):
     def __init__(self, path: str) -> None:
-        super().__init__()
-        self._path: str = path
+        super().__init__(path)

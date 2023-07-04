@@ -1,5 +1,4 @@
 import asyncio
-import logging as log
 
 from softioc import asyncio_dispatcher, softioc
 
