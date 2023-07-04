@@ -47,7 +47,7 @@ class AttrRead(Attribute[T]):
         self._value = self._dtype(value)
 
         if self._update_callback is not None:
-            await self._update_callback(value)
+            await self._update_callback(self._value)
 
     def set_update_callback(self, callback: Optional[AttrCallback[T]]) -> None:
         self._update_callback = callback
