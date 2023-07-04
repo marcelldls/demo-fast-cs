@@ -82,12 +82,12 @@ class EpicsGUI:
             group_name = type(single_mapping.controller).__name__ + " " + attr_path
             group_children: list[Component] = []
 
-            for attr_data in single_mapping.attributes:
+            for attr_name, attribute in single_mapping.attributes.items():
                 group_children.append(
                     self._get_attribute_component(
                         attr_path,
-                        attr_data.name,
-                        attr_data.attribute,
+                        attr_name,
+                        attribute,
                     )
                 )
 

@@ -8,14 +8,13 @@ from .cs_methods import MethodInfo
 MethodData = NamedTuple(
     "MethodData", (("name", str), ("info", MethodInfo), ("method", Callable))
 )
-AttributeData = NamedTuple("AttributeData", (("name", str), ("attribute", Attribute)))
 
 
 @dataclass
 class SingleMapping:
     controller: BaseController
     methods: list[MethodData]
-    attributes: list[AttributeData]
+    attributes: dict[str, Attribute]
 
 
 class Mapping:
@@ -26,13 +25,13 @@ class Mapping:
     @staticmethod
     def _get_single_mapping(controller: BaseController) -> SingleMapping:
         methods = []
-        attributes = []
+        attributes = {}
         for attr_name in dir(controller):
             attr = getattr(controller, attr_name)
             if hasattr(attr, "fastcs_method_info"):
                 methods.append(MethodData(attr_name, attr.fastcs_method_info, attr))
             elif isinstance(attr, Attribute):
-                attributes.append(AttributeData(attr_name, attr))
+                attributes[attr_name] = attr
 
         return SingleMapping(controller, methods, attributes)
 
