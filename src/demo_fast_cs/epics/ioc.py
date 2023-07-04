@@ -21,37 +21,37 @@ class EpicsIOCOptions:
     terminal: bool = True
 
 
-def create_and_link_read_pv(path: str, attr_name: str, attribute: AttrRead) -> None:
-    attr_name = attr_name.title()
-    pv_name = path.upper() + ":" + attr_name if path else attr_name
+def create_and_link_read_pv(pv_name: str, attribute: AttrRead) -> None:
     ai = builder.aIn(pv_name)
-    attribute.set_update_callback(ai.set)
+
+    async def async_wrapper(v):
+        ai.set(v)
+
+    attribute.set_update_callback(async_wrapper)
 
 
-def create_and_link_write_pv(path: str, attr_name: str, attribute: AttrWrite) -> None:
-    attr_name = attr_name.title()
-    pv_name = path.upper() + ":" + attr_name if path else attr_name
-    pv_name += "_RBV"
-    ao = builder.aOut(
-        pv_name, always_update=True, on_update=lambda v: attribute.process(v)
-    )
+def create_and_link_write_pv(pv_name: str, attribute: AttrWrite) -> None:
+    builder.aOut(pv_name, always_update=True, on_update=attribute.process)
 
 
 def _create_and_link_pvs(mapping: Mapping) -> None:
     for single_mapping in mapping.get_controller_mappings():
         path = single_mapping.controller.path
         for attr_name, attribute in single_mapping.attributes.items():
+            attr_name = attr_name.title()
+            pv_name = path.upper() + ":" + attr_name if path else attr_name
+
             match attribute.mode:
                 case AttrMode.READ:
                     attribute = cast(AttrRead, attribute)
-                    create_and_link_read_pv(path, attr_name, attribute)
+                    create_and_link_read_pv(pv_name, attribute)
                 case AttrMode.WRITE:
                     attribute = cast(AttrWrite, attribute)
-                    create_and_link_write_pv(path, attr_name, attribute)
+                    create_and_link_write_pv(pv_name, attribute)
                 case AttrMode.READ_WRITE:
                     attribute = cast(AttrReadWrite, attribute)
-                    create_and_link_read_pv(path, attr_name, attribute)
-                    create_and_link_write_pv(path, attr_name, attribute)
+                    create_and_link_read_pv(pv_name + "_RBV", attribute)
+                    create_and_link_write_pv(pv_name, attribute)
 
 
 class EpicsIOC:
@@ -87,13 +87,13 @@ class EpicsIOC:
         for task in scan_tasks:
             dispatcher(task)
 
-        # # Run the interactive shell
-        # global_variables = globals()
-        # global_variables.update(
-        #     {
-        #         "dispatcher": dispatcher,
-        #         "mapping": self._mapping,
-        #         "controller": self._mapping.controller,
-        #     }
-        # )
+        # Run the interactive shell
+        global_variables = globals()
+        global_variables.update(
+            {
+                "dispatcher": dispatcher,
+                "mapping": self._mapping,
+                "controller": self._mapping.controller,
+            }
+        )
         softioc.interactive_ioc(globals())
