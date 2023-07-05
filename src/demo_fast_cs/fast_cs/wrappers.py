@@ -19,3 +19,8 @@ def scan(period: float) -> Any:
 def put(fn) -> Any:
     fn.fastcs_method_info = MethodInfo(MethodType.put, fn)
     return fn
+
+
+def command(fn) -> Any:
+    fn.fastcs_method_info = MethodInfo(MethodType.command, fn)
+    return fn

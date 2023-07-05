@@ -11,6 +11,7 @@ ScanCallback: TypeAlias = Callable[..., Awaitable[None]]
 class MethodType(Enum):
     scan = "scan"
     put = "put"
+    command = "command"
 
 
 class MethodInfo:
@@ -34,6 +35,8 @@ class MethodInfo:
                 self._validate_scan_method(fn)
             case MethodType.put:
                 self._validate_put_method(fn)
+            case MethodType.command:
+                self._validate_command_method(fn)
 
     def _validate_scan_method(self, fn: Callable) -> None:
         if not len(self.parameters) == 1:
@@ -42,6 +45,10 @@ class MethodInfo:
     def _validate_put_method(self, fn: Callable) -> None:
         if not len(self.parameters) == 2:
             raise FastCSException("Put method can only take one argument")
+
+    def _validate_command_method(self, fn: Callable) -> None:
+        if not len(self.parameters) == 1:
+            raise FastCSException("Command method cannot have arguments")
 
     def _store_method_details(self, fn):
         self._docstring = getdoc(fn)

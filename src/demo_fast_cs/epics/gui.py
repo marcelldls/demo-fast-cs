@@ -14,12 +14,14 @@ from pvi.device import (
     SignalR,
     SignalRW,
     SignalW,
+    SignalX,
     TextRead,
     TextWrite,
     Tree,
 )
 
 from ..fast_cs.attributes import Attribute, AttrMode
+from ..fast_cs.cs_methods import MethodType
 from ..fast_cs.exceptions import FastCSException
 from ..fast_cs.mapping import Mapping
 
@@ -64,6 +66,13 @@ class EpicsGUI:
             case AttrMode.READ_WRITE:
                 return SignalRW(name, pv, TextWrite(), pv + "_RBV", TextRead())
 
+    @classmethod
+    def _get_command_component(cls, attr_path: str, name: str):
+        pv = cls._get_pv(attr_path, name)
+        name = name.title()
+
+        return SignalX(name, pv=pv, value=1)
+
     def create_gui(self, options: Optional[EpicsGUIOptions] = None) -> None:
         if options is None:
             options = EpicsGUIOptions()
@@ -90,6 +99,12 @@ class EpicsGUI:
                         attribute,
                     )
                 )
+
+            for method_data in single_mapping.methods:
+                if method_data.info.method_type == MethodType.command:
+                    group_children.append(
+                        self._get_command_component(attr_path, method_data.name)
+                    )
 
             components.append(Group(group_name, Grid(), group_children))
 

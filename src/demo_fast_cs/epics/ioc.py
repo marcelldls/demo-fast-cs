@@ -1,18 +1,12 @@
 import asyncio
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import Any, Callable, Optional, cast
 
 from softioc import asyncio_dispatcher, builder, softioc
 
-from ..fast_cs.attributes import (
-    AttrCallback,
-    Attribute,
-    AttrMode,
-    AttrRead,
-    AttrReadWrite,
-    AttrWrite,
-)
+from ..fast_cs.attributes import AttrMode, AttrRead, AttrReadWrite, AttrWrite
 from ..fast_cs.backend import get_initial_tasks, get_scan_tasks, link_process_tasks
+from ..fast_cs.cs_methods import MethodType
 from ..fast_cs.mapping import Mapping
 
 
@@ -34,7 +28,14 @@ def create_and_link_write_pv(pv_name: str, attribute: AttrWrite) -> None:
     builder.aOut(pv_name, always_update=True, on_update=attribute.process)
 
 
-def _create_and_link_pvs(mapping: Mapping) -> None:
+def create_and_link_command_pv(pv_name: str, method: Callable) -> None:
+    async def wrapped_method(_: Any):
+        await method()
+
+    builder.aOut(pv_name, always_update=True, on_update=wrapped_method)
+
+
+def _create_and_link_attribute_pvs(mapping: Mapping) -> None:
     for single_mapping in mapping.get_controller_mappings():
         path = single_mapping.controller.path
         for attr_name, attribute in single_mapping.attributes.items():
@@ -54,6 +55,17 @@ def _create_and_link_pvs(mapping: Mapping) -> None:
                     create_and_link_write_pv(pv_name, attribute)
 
 
+def _create_and_link_command_pvs(mapping: Mapping) -> None:
+    for single_mapping in mapping.get_controller_mappings():
+        path = single_mapping.controller.path
+        for method_data in single_mapping.methods:
+            if method_data.info.method_type == MethodType.command:
+                name = method_data.name.title()
+                pv_name = path.upper() + ":" + name if path else name
+
+                create_and_link_command_pv(pv_name, method_data.method)
+
+
 class EpicsIOC:
     def __init__(self, mapping: Mapping):
         self._mapping = mapping
@@ -68,7 +80,9 @@ class EpicsIOC:
         # Set the record prefix
         builder.SetDeviceName("MY-DEVICE-PREFIX")
 
-        _create_and_link_pvs(self._mapping)
+        _create_and_link_attribute_pvs(self._mapping)
+
+        _create_and_link_command_pvs(self._mapping)
 
         # Boilerplate to get the IOC started
         builder.LoadDatabase()

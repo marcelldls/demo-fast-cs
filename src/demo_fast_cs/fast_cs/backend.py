@@ -60,4 +60,3 @@ def _link_single_controller_process_tasks(single_mapping: SingleMapping):
 def link_process_tasks(mapping: Mapping) -> None:
     for single_mapping in mapping.get_controller_mappings():
         _link_single_controller_process_tasks(single_mapping)
-

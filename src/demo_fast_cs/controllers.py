@@ -4,7 +4,7 @@ from typing import NamedTuple, Sequence, cast
 from .fast_cs import BaseController, Controller, SubController
 from .fast_cs.attributes import AttrRead, AttrReadWrite
 from .fast_cs.connections import IPConnection, IPConnectionSettings
-from .fast_cs.wrappers import put, scan
+from .fast_cs.wrappers import command, put, scan
 
 AttributeInfo = NamedTuple("AttributeInfo", (("name", str), ("prefix", str)))
 
@@ -51,6 +51,11 @@ class TempController(Controller):
     @scan(0.2)
     async def update(self) -> None:
         await update_values(self, self._conn, self._attributes)
+
+    @command
+    async def cancel_all(self) -> None:
+        for rc in self._ramp_controllers:
+            await rc.enabled.process(0)
 
     async def connect(self) -> None:
         await self._conn.connect(self._settings.ip_settings)
