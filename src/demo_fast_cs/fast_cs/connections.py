@@ -37,6 +37,7 @@ class IPConnection:
             await self._send_message(message)
             return await self._receive_response()
 
+    # TODO: Figure out type hinting for connections. TypeGuard fails to work as expected
     async def close(self):
         async with self._lock:
             self.ensure_connected()
