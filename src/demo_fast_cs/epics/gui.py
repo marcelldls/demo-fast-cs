@@ -49,14 +49,14 @@ class EpicsGUI:
             attr_path = ":" + attr_path
         attr_path += ":"
 
-        pv = attr_path.upper() + name.title()
+        pv = attr_path.upper() + name.title().replace("_", "")
 
         return pv
 
     @classmethod
     def _get_attribute_component(cls, attr_path: str, name: str, attribute: Attribute):
         pv = cls._get_pv(attr_path, name)
-        name = name.title()
+        name = name.title().replace("_", " ")
 
         match attribute.mode:
             case AttrMode.READ:
@@ -69,9 +69,9 @@ class EpicsGUI:
     @classmethod
     def _get_command_component(cls, attr_path: str, name: str):
         pv = cls._get_pv(attr_path, name)
-        name = name.title()
+        name = name.title().replace("_", " ")
 
-        return SignalX(name, pv=pv, value=1)
+        return SignalX(name, pv, value=1)
 
     def create_gui(self, options: Optional[EpicsGUIOptions] = None) -> None:
         if options is None:

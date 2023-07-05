@@ -39,7 +39,7 @@ def _create_and_link_attribute_pvs(mapping: Mapping) -> None:
     for single_mapping in mapping.get_controller_mappings():
         path = single_mapping.controller.path
         for attr_name, attribute in single_mapping.attributes.items():
-            attr_name = attr_name.title()
+            attr_name = attr_name.title().replace("_", "")
             pv_name = path.upper() + ":" + attr_name if path else attr_name
 
             match attribute.mode:
@@ -60,7 +60,7 @@ def _create_and_link_command_pvs(mapping: Mapping) -> None:
         path = single_mapping.controller.path
         for method_data in single_mapping.methods:
             if method_data.info.method_type == MethodType.command:
-                name = method_data.name.title()
+                name = method_data.name.title().replace("_", "")
                 pv_name = path.upper() + ":" + name if path else name
 
                 create_and_link_command_pv(pv_name, method_data.method)
