@@ -53,7 +53,7 @@ class MethodInfo:
     def _store_method_details(self, fn):
         self._docstring = getdoc(fn)
 
-        sig = signature(fn)
+        sig = signature(fn, eval_str=True)
         self._parameters = sig.parameters
         self._return_type = sig.return_annotation
 

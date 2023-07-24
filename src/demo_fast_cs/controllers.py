@@ -45,7 +45,7 @@ class TempControllerSender:
 
 
 class TempController(Controller):
-    ramp_rate = AttrReadWrite(float, sender=TempControllerSender)
+    ramp_rate = AttrReadWrite(float, sender=TempControllerSender("R"))
 
     _attributes = (AttributeInfo("ramp_rate", "R"),)
 

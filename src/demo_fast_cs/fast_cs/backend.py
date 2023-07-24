@@ -36,7 +36,7 @@ def get_scan_tasks(mapping: Mapping) -> list[Callable]:
     return methods
 
 
-def _link_single_controller_process_tasks(single_mapping: SingleMapping):
+def _link_single_controller_put_tasks(single_mapping: SingleMapping):
     put_methods = [
         method_data
         for method_data in single_mapping.methods
@@ -57,6 +57,30 @@ def _link_single_controller_process_tasks(single_mapping: SingleMapping):
         attribute.set_process_callback(method)
 
 
+def _get_sender_callback(attribute, controller):
+    async def callback(value):
+        await attribute.sender.put(controller, value)
+
+    return callback
+
+
+def _link_attribute_sender_class(single_mapping: SingleMapping) -> None:
+    for attr_name, attribute in single_mapping.attributes.items():
+        if attribute.mode in (AttrMode.WRITE, AttrMode.READ_WRITE):
+            attribute = cast(AttrWrite, attribute)
+
+            if attribute.sender is None:
+                continue
+
+            assert (
+                not attribute.has_process_callback()
+            ), f"Cannot assign put method and Sender to {attr_name}"
+
+            callback = _get_sender_callback(attribute, single_mapping.controller)
+            attribute.set_process_callback(callback)
+
+
 def link_process_tasks(mapping: Mapping) -> None:
     for single_mapping in mapping.get_controller_mappings():
-        _link_single_controller_process_tasks(single_mapping)
+        _link_single_controller_put_tasks(single_mapping)
+        _link_attribute_sender_class(single_mapping)

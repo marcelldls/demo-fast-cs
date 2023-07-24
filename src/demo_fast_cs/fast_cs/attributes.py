@@ -1,5 +1,14 @@
 from enum import Enum
-from typing import Awaitable, Callable, Generic, Optional, TypeAlias, TypeVar
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Generic,
+    Optional,
+    Protocol,
+    TypeAlias,
+    TypeVar,
+)
 
 ATTRIBUTE_TYPES = (
     int,
@@ -15,6 +24,11 @@ class AttrMode(Enum):
     READ = 1
     WRITE = 2
     READ_WRITE = 3
+
+
+class Sender(Protocol):
+    async def put(self, controller: Any, value: Any) -> None:
+        pass
 
 
 class Attribute(Generic[T]):
@@ -54,9 +68,10 @@ class AttrRead(Attribute[T]):
 
 
 class AttrWrite(Attribute[T]):
-    def __init__(self, dtype: type[T]) -> None:
+    def __init__(self, dtype: type[T], sender: Sender | None = None) -> None:
         super().__init__(dtype)  # type: ignore
         self._process_callback: Optional[AttrCallback[T]] = None
+        self._sender = sender
 
     async def process(self, value: T) -> None:
         if self._process_callback is not None:
@@ -65,10 +80,17 @@ class AttrWrite(Attribute[T]):
     def set_process_callback(self, callback: Optional[AttrCallback[T]]) -> None:
         self._process_callback = callback
 
+    def has_process_callback(self) -> bool:
+        return self._process_callback is not None
+
+    @property
+    def sender(self) -> Sender | None:
+        return self._sender
+
 
 class AttrReadWrite(AttrWrite[T], AttrRead[T]):
-    def __init__(self, dtype: type[T]) -> None:
-        super().__init__(dtype)  # type: ignore
+    def __init__(self, dtype: type[T], sender: Sender | None = None) -> None:
+        super().__init__(dtype, sender)  # type: ignore
         self._mode = AttrMode.READ_WRITE
 
     async def process(self, value: T) -> None:
