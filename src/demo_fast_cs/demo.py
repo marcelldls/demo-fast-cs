@@ -20,10 +20,10 @@ async def run_controller() -> None:
     tcont = get_controller()
     await tcont.connect()
     print(f"Initial ramp rate: {tcont.ramp_rate.get()}")
-    await tcont.update()
+    # await tcont.update()
     print(f"Starting ramp rate: {tcont.ramp_rate.get()}")
     # await tcont.put_ramp_rate(5)
-    await tcont.update()
+    # await tcont.update()
     print(f"Final ramp rate: {tcont.ramp_rate.get()}")
     # trc = tcont.get_sub_controllers()[0]
     # await trc.update()

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 from typing import (
     Any,
@@ -27,12 +29,23 @@ class AttrMode(Enum):
 
 
 class Sender(Protocol):
-    async def put(self, controller: Any, value: Any) -> None:
+    async def put(self, controller: Any, attr: AttrWrite, value: Any) -> None:
         pass
 
 
+class Updater(Protocol):
+    update_period: float
+
+    async def update(self, controller: Any, attr: AttrRead) -> None:
+        pass
+
+
+class Handler(Sender, Updater, Protocol):
+    pass
+
+
 class Attribute(Generic[T]):
-    def __init__(self, dtype: type[T], mode: AttrMode) -> None:
+    def __init__(self, dtype: type[T], mode: AttrMode, handler: Any = None) -> None:
         assert (
             dtype in ATTRIBUTE_TYPES
         ), f"Attribute type must be one of {ATTRIBUTE_TYPES}, received type {dtype}"
@@ -49,10 +62,16 @@ class Attribute(Generic[T]):
 
 
 class AttrRead(Attribute[T]):
-    def __init__(self, dtype: type[T]) -> None:
-        super().__init__(dtype, AttrMode.READ)  # type: ignore
+    def __init__(
+        self,
+        dtype: type[T],
+        mode=AttrMode.READ,
+        handler: Updater | None = None,
+    ) -> None:
+        super().__init__(dtype, mode=mode, handler=handler)  # type: ignore
         self._value: T = dtype()
         self._update_callback: Optional[AttrCallback[T]] = None
+        self._updater = handler
 
     def get(self) -> T:
         return self._value
@@ -66,12 +85,18 @@ class AttrRead(Attribute[T]):
     def set_update_callback(self, callback: Optional[AttrCallback[T]]) -> None:
         self._update_callback = callback
 
+    @property
+    def updater(self) -> Updater | None:
+        return self._updater
+
 
 class AttrWrite(Attribute[T]):
-    def __init__(self, dtype: type[T], sender: Sender | None = None) -> None:
-        super().__init__(dtype)  # type: ignore
+    def __init__(
+        self, dtype: type[T], mode=AttrMode.WRITE, handler: Sender | None = None
+    ) -> None:
+        super().__init__(dtype, mode=mode, handler=handler)  # type: ignore
         self._process_callback: Optional[AttrCallback[T]] = None
-        self._sender = sender
+        self._sender = handler
 
     async def process(self, value: T) -> None:
         if self._process_callback is not None:
@@ -89,9 +114,10 @@ class AttrWrite(Attribute[T]):
 
 
 class AttrReadWrite(AttrWrite[T], AttrRead[T]):
-    def __init__(self, dtype: type[T], sender: Sender | None = None) -> None:
-        super().__init__(dtype, sender)  # type: ignore
-        self._mode = AttrMode.READ_WRITE
+    def __init__(
+        self, dtype: type[T], mode=AttrMode.READ_WRITE, handler: Handler | None = None
+    ) -> None:
+        super().__init__(dtype, mode=mode, handler=handler)  # type: ignore
 
     async def process(self, value: T) -> None:
         await self.set(value)

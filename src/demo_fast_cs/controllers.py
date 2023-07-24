@@ -1,26 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, NamedTuple, Sequence, cast
+from typing import Any
 
-from .fast_cs import BaseController, Controller, SubController
-from .fast_cs.attributes import AttrRead, AttrReadWrite
+from .fast_cs import Controller, SubController
+from .fast_cs.attributes import AttrRead, AttrReadWrite, AttrWrite
 from .fast_cs.connections import IPConnection, IPConnectionSettings
-from .fast_cs.wrappers import command, scan
-
-AttributeInfo = NamedTuple("AttributeInfo", (("name", str), ("prefix", str)))
-
-
-async def update_values(
-    controller: BaseController,
-    conn: IPConnection,
-    attr_infos: Sequence[AttributeInfo],
-    suffix: str = "",
-) -> None:
-    for info in attr_infos:
-        response = await conn.send_query(f"{info.prefix}{suffix}?\r\n")
-        attr = cast(AttrRead, getattr(controller, info.name))
-        await attr.set(response)
+from .fast_cs.wrappers import command
 
 
 @dataclass
@@ -30,21 +16,33 @@ class TempControllerSettings:
 
 
 @dataclass
-class TempControllerSender:
+class TempControllerHandler:
     name: str
+    update_period: float = 0.2
 
     async def put(
-        self, controller: TempController | TempRampController, value: Any
+        self,
+        controller: TempController | TempRampController,
+        attr: AttrWrite,
+        value: Any,
     ) -> None:
         await controller.conn.send_command(
             f"{self.name}{controller.suffix}={value}\r\n"
         )
 
+    async def update(
+        self,
+        controller: TempController | TempRampController,
+        attr: AttrRead,
+    ) -> None:
+        response = await controller.conn.send_query(
+            f"{self.name}{controller.suffix}?\r\n"
+        )
+        await attr.set(response)
+
 
 class TempController(Controller):
-    ramp_rate = AttrReadWrite(float, sender=TempControllerSender("R"))
-
-    _attributes = (AttributeInfo("ramp_rate", "R"),)
+    ramp_rate = AttrReadWrite(float, handler=TempControllerHandler("R"))
 
     def __init__(self, settings: TempControllerSettings) -> None:
         super().__init__()
@@ -59,10 +57,6 @@ class TempController(Controller):
             self._ramp_controllers.append(controller)
             self.register_sub_controller(controller)
 
-    @scan(0.2)
-    async def update(self) -> None:
-        await update_values(self, self.conn, self._attributes)
-
     @command
     async def cancel_all(self) -> None:
         for rc in self._ramp_controllers:
@@ -76,23 +70,12 @@ class TempController(Controller):
 
 
 class TempRampController(SubController):
-    start = AttrReadWrite(float, sender=TempControllerSender("S"))
-    end = AttrReadWrite(float, sender=TempControllerSender("E"))
-    current = AttrRead(float)
-    enabled = AttrReadWrite(int, sender=TempControllerSender("N"))
-
-    _attributes = (
-        AttributeInfo("start", "S"),
-        AttributeInfo("end", "E"),
-        AttributeInfo("current", "T"),
-        AttributeInfo("enabled", "N"),
-    )
+    start = AttrReadWrite(float, handler=TempControllerHandler("S"))
+    end = AttrReadWrite(float, handler=TempControllerHandler("E"))
+    current = AttrRead(float, handler=TempControllerHandler("T"))
+    enabled = AttrReadWrite(int, handler=TempControllerHandler("N"))
 
     def __init__(self, index: int, conn: IPConnection) -> None:
         self.suffix = f"{index:02d}"
         super().__init__(f"ramp{self.suffix}")
         self.conn = conn
-
-    @scan(0.2)
-    async def update(self) -> None:
-        await update_values(self, self.conn, self._attributes, self.suffix)
