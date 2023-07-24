@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import NamedTuple, Sequence, cast
+from typing import Any, NamedTuple, Sequence, cast
 
 from .fast_cs import BaseController, Controller, SubController
 from .fast_cs.attributes import AttrRead, AttrReadWrite
 from .fast_cs.connections import IPConnection, IPConnectionSettings
-from .fast_cs.wrappers import command, put, scan
+from .fast_cs.wrappers import command, scan
 
 AttributeInfo = NamedTuple("AttributeInfo", (("name", str), ("prefix", str)))
 
@@ -27,30 +29,45 @@ class TempControllerSettings:
     ip_settings: IPConnectionSettings
 
 
+@dataclass
+class TempControllerPutParams:
+    suffix: str = ""
+
+
+@dataclass
+class TempControllerSender:
+    name: str
+
+    async def put(
+        self, controller: TempController | TempRampController, value: Any
+    ) -> None:
+        await controller.conn.send_command(f"{self.name}{controller.suffix}={value}")
+
+
 class TempController(Controller):
-    ramp_rate = AttrReadWrite(float)
+    ramp_rate = AttrReadWrite(float, sender=TempControllerSender)
 
     _attributes = (AttributeInfo("ramp_rate", "R"),)
 
     def __init__(self, settings: TempControllerSettings) -> None:
         super().__init__()
 
+        self.suffix = ""
         self._settings = settings
-        self._conn = IPConnection()
+        self.conn = IPConnection()
 
         self._ramp_controllers: list[TempRampController] = []
         for index in range(1, settings.num_ramp_controllers + 1):
-            controller = TempRampController(index, self._conn)
+            controller = TempRampController(index, self.conn)
             self._ramp_controllers.append(controller)
             self.register_sub_controller(controller)
 
-    @put
-    async def put_ramp_rate(self, value: float) -> None:
-        await self._conn.send_command(f"R={value}\r\n")
+    def get_put_params(self) -> TempControllerPutParams:
+        return TempControllerPutParams()
 
     @scan(0.2)
     async def update(self) -> None:
-        await update_values(self, self._conn, self._attributes)
+        await update_values(self, self.conn, self._attributes)
 
     @command
     async def cancel_all(self) -> None:
@@ -58,17 +75,17 @@ class TempController(Controller):
             await rc.enabled.process(0)
 
     async def connect(self) -> None:
-        await self._conn.connect(self._settings.ip_settings)
+        await self.conn.connect(self._settings.ip_settings)
 
     async def close(self) -> None:
-        await self._conn.close()
+        await self.conn.close()
 
 
 class TempRampController(SubController):
-    start = AttrReadWrite(float)
-    end = AttrReadWrite(float)
+    start = AttrReadWrite(float, sender=TempControllerSender("S"))
+    end = AttrReadWrite(float, sender=TempControllerSender("E"))
     current = AttrRead(float)
-    enabled = AttrReadWrite(int)
+    enabled = AttrReadWrite(int, sender=TempControllerSender("N"))
 
     _attributes = (
         AttributeInfo("start", "S"),
@@ -78,23 +95,13 @@ class TempRampController(SubController):
     )
 
     def __init__(self, index: int, conn: IPConnection) -> None:
-        suffix = f"{index:02d}"
-        super().__init__(f"ramp{suffix}")
-        self._conn = conn
-        self._suffix = suffix
+        self.suffix = f"{index:02d}"
+        super().__init__(f"ramp{self.suffix}")
+        self.conn = conn
+
+    def get_put_params(self) -> TempControllerPutParams:
+        return TempControllerPutParams(self.suffix)
 
     @scan(0.2)
     async def update(self) -> None:
-        await update_values(self, self._conn, self._attributes, self._suffix)
-
-    @put
-    async def put_enabled(self, value: int) -> None:
-        await self._conn.send_command(f"N{self._suffix}={value}\r\n")
-
-    @put
-    async def put_start(self, value: float) -> None:
-        await self._conn.send_command(f"S{self._suffix}={value}\r\n")
-
-    @put
-    async def put_end(self, value: float) -> None:
-        await self._conn.send_command(f"E{self._suffix}={value}\r\n")
+        await update_values(self, self.conn, self._attributes, self.suffix)
