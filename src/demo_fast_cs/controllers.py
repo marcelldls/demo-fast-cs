@@ -36,7 +36,9 @@ class TempControllerSender:
     async def put(
         self, controller: TempController | TempRampController, value: Any
     ) -> None:
-        await controller.conn.send_command(f"{self.name}{controller.suffix}={value}")
+        await controller.conn.send_command(
+            f"{self.name}{controller.suffix}={value}\r\n"
+        )
 
 
 class TempController(Controller):

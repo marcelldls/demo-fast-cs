@@ -46,7 +46,6 @@ class IPConnection:
             self._reader, self._writer = (None, None)
 
     async def _send_message(self, message) -> None:
-        message = message + "\r\n"  # TODO: Handle automatic concatenation more cleanly
         self._writer.write(message.encode("utf-8"))
         await self._writer.drain()
 
