@@ -30,11 +30,6 @@ class TempControllerSettings:
 
 
 @dataclass
-class TempControllerPutParams:
-    suffix: str = ""
-
-
-@dataclass
 class TempControllerSender:
     name: str
 
@@ -61,9 +56,6 @@ class TempController(Controller):
             controller = TempRampController(index, self.conn)
             self._ramp_controllers.append(controller)
             self.register_sub_controller(controller)
-
-    def get_put_params(self) -> TempControllerPutParams:
-        return TempControllerPutParams()
 
     @scan(0.2)
     async def update(self) -> None:
@@ -98,9 +90,6 @@ class TempRampController(SubController):
         self.suffix = f"{index:02d}"
         super().__init__(f"ramp{self.suffix}")
         self.conn = conn
-
-    def get_put_params(self) -> TempControllerPutParams:
-        return TempControllerPutParams(self.suffix)
 
     @scan(0.2)
     async def update(self) -> None:
