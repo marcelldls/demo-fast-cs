@@ -15,7 +15,7 @@ def get_initial_tasks(mapping: Mapping) -> list[Callable]:
     return initial_tasks
 
 
-def get_scan_method(method_data: MethodData) -> tuple[float, Callable]:
+def _get_scan_method(method_data: MethodData) -> tuple[float, Callable]:
     period = method_data.info.kwargs["period"]
     method = method_data.method
 
@@ -27,7 +27,7 @@ def get_scan_method(method_data: MethodData) -> tuple[float, Callable]:
     return period, scan_method
 
 
-def _get_periodic_scan_task(period, methods: list[Callable]) -> Callable:
+def _create_periodic_scan_task(period, methods: list[Callable]) -> Callable:
     async def scan_task() -> None:
         while True:
             await asyncio.gather(*[method() for method in methods])
@@ -39,44 +39,47 @@ def _get_periodic_scan_task(period, methods: list[Callable]) -> Callable:
 def _get_periodic_scan_tasks(scan_dict: dict[float, list[Callable]]) -> list[Callable]:
     periodic_scan_tasks: list[Callable] = []
     for period, methods in scan_dict.items():
-        periodic_scan_tasks.append(_get_periodic_scan_task(period, methods))
+        periodic_scan_tasks.append(_create_periodic_scan_task(period, methods))
 
     return periodic_scan_tasks
 
 
-def _add_wrapped_scan_tasks(scan_dict: dict[float, list[Callable]], mapping: Mapping):
-    for single_mapping in mapping.get_controller_mappings():
-        for method_data in single_mapping.methods:
-            if method_data.info.method_type == MethodType.scan:
-                period, method = get_scan_method(method_data)
-                scan_dict[period].append(method)
+def _add_wrapped_scan_tasks(
+    scan_dict: dict[float, list[Callable]], single_mapping: SingleMapping
+):
+    for method_data in single_mapping.methods:
+        if method_data.info.method_type == MethodType.scan:
+            period, method = _get_scan_method(method_data)
+            scan_dict[period].append(method)
 
 
-def _get_updater_callback(attribute, controller):
+def _create_updater_callback(attribute, controller):
     async def callback():
         await attribute.updater.update(controller, attribute)
 
     return callback
 
 
-def _add_updater_scan_tasks(scan_dict: dict[float, list[Callable]], mapping: Mapping):
-    for single_mapping in mapping.get_controller_mappings():
-        for attr_name, attribute in single_mapping.attributes.items():
-            if attribute.mode in (AttrMode.READ, AttrMode.READ_WRITE):
-                attribute = cast(AttrRead, attribute)
+def _add_updater_scan_tasks(
+    scan_dict: dict[float, list[Callable]], single_mapping: SingleMapping
+):
+    for attribute in single_mapping.attributes.values():
+        if attribute.mode in (AttrMode.READ, AttrMode.READ_WRITE):
+            attribute = cast(AttrRead, attribute)
 
-                if attribute.updater is None:
-                    continue
+            if attribute.updater is None:
+                continue
 
-                callback = _get_updater_callback(attribute, single_mapping.controller)
-                scan_dict[attribute.updater.update_period].append(callback)
+            callback = _create_updater_callback(attribute, single_mapping.controller)
+            scan_dict[attribute.updater.update_period].append(callback)
 
 
 def get_scan_tasks(mapping: Mapping) -> list[Callable]:
     scan_dict: dict[float, list[Callable]] = defaultdict(list)
 
-    _add_wrapped_scan_tasks(scan_dict, mapping)
-    _add_updater_scan_tasks(scan_dict, mapping)
+    for single_mapping in mapping.get_controller_mappings():
+        _add_wrapped_scan_tasks(scan_dict, single_mapping)
+        _add_updater_scan_tasks(scan_dict, single_mapping)
 
     scan_tasks = _get_periodic_scan_tasks(scan_dict)
     return scan_tasks
@@ -103,7 +106,7 @@ def _link_single_controller_put_tasks(single_mapping: SingleMapping):
         attribute.set_process_callback(method)
 
 
-def _get_sender_callback(attribute, controller):
+def _create_sender_callback(attribute, controller):
     async def callback(value):
         await attribute.sender.put(controller, attribute, value)
 
@@ -122,7 +125,7 @@ def _link_attribute_sender_class(single_mapping: SingleMapping) -> None:
                 not attribute.has_process_callback()
             ), f"Cannot assign put method and Sender to {attr_name}"
 
-            callback = _get_sender_callback(attribute, single_mapping.controller)
+            callback = _create_sender_callback(attribute, single_mapping.controller)
             attribute.set_process_callback(callback)
 
 
