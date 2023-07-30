@@ -26,6 +26,8 @@ class TempControllerHandler:
         attr: AttrWrite,
         value: Any,
     ) -> None:
+        if attr.dtype is bool:
+            value = int(value)
         await controller.conn.send_command(
             f"{self.name}{controller.suffix}={value}\r\n"
         )
@@ -38,7 +40,10 @@ class TempControllerHandler:
         response = await controller.conn.send_query(
             f"{self.name}{controller.suffix}?\r\n"
         )
-        await attr.set(response)
+        if attr.dtype is bool:
+            await attr.set(int(response))
+        else:
+            await attr.set(response)
 
 
 class TempController(Controller):
@@ -60,7 +65,7 @@ class TempController(Controller):
     @command
     async def cancel_all(self) -> None:
         for rc in self._ramp_controllers:
-            await rc.enabled.process(0)
+            await rc.enabled.process(False)
 
     async def connect(self) -> None:
         await self.conn.connect(self._settings.ip_settings)
@@ -73,7 +78,7 @@ class TempRampController(SubController):
     start = AttrReadWrite(float, handler=TempControllerHandler("S"))
     end = AttrReadWrite(float, handler=TempControllerHandler("E"))
     current = AttrRead(float, handler=TempControllerHandler("T"))
-    enabled = AttrReadWrite(int, handler=TempControllerHandler("N"))
+    enabled = AttrReadWrite(bool, handler=TempControllerHandler("N"))
 
     def __init__(self, index: int, conn: IPConnection) -> None:
         self.suffix = f"{index:02d}"

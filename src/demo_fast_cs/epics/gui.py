@@ -7,10 +7,13 @@ from pvi._format import Formatter
 from pvi._format.base import Formatter
 from pvi._yaml_utils import deserialize_yaml
 from pvi.device import (
+    LED,
+    CheckBox,
     Component,
     Device,
     Grid,
     Group,
+    ReadWidget,
     SignalR,
     SignalRW,
     SignalW,
@@ -18,6 +21,7 @@ from pvi.device import (
     TextRead,
     TextWrite,
     Tree,
+    WriteWidget,
 )
 
 from ..fast_cs.attributes import Attribute, AttrMode
@@ -53,6 +57,20 @@ class EpicsGUI:
 
         return pv
 
+    @staticmethod
+    def _get_read_widget(dtype: type) -> ReadWidget:
+        if dtype is bool:
+            return LED()
+        else:
+            return TextRead()
+
+    @staticmethod
+    def _get_write_widget(dtype: type) -> WriteWidget:
+        if dtype is bool:
+            return CheckBox()
+        else:
+            return TextWrite()
+
     @classmethod
     def _get_attribute_component(cls, attr_path: str, name: str, attribute: Attribute):
         pv = cls._get_pv(attr_path, name)
@@ -60,11 +78,15 @@ class EpicsGUI:
 
         match attribute.mode:
             case AttrMode.READ:
-                return SignalR(name, pv, TextRead())
+                read_widget = cls._get_read_widget(attribute.dtype)
+                return SignalR(name, pv, read_widget)
             case AttrMode.WRITE:
+                write_widget = cls._get_write_widget(attribute.dtype)
                 return SignalW(name, pv, TextWrite())
             case AttrMode.READ_WRITE:
-                return SignalRW(name, pv, TextWrite(), pv + "_RBV", TextRead())
+                read_widget = cls._get_read_widget(attribute.dtype)
+                write_widget = cls._get_write_widget(attribute.dtype)
+                return SignalRW(name, pv, write_widget, pv + "_RBV", read_widget)
 
     @classmethod
     def _get_command_component(cls, attr_path: str, name: str):
