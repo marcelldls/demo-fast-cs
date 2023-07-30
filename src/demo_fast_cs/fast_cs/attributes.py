@@ -3,12 +3,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Awaitable, Callable, Generic, Optional, Protocol, TypeVar
 
-ATTRIBUTE_TYPES = (
-    int,
-    float,
-)
-
 T = TypeVar("T", int, float)
+ATTRIBUTE_TYPES: tuple[type] = T.__constraints__  # type: ignore
+
 
 AttrCallback = Callable[[T], Awaitable[None]]
 
