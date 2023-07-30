@@ -15,20 +15,36 @@ class EpicsIOCOptions:
     terminal: bool = True
 
 
-def create_and_link_read_pv(pv_name: str, attribute: AttrRead) -> None:
-    ai = builder.aIn(pv_name)
+def _get_input_record(pv_name: str, dtype: type) -> Any:
+    if dtype is bool:
+        return builder.boolIn(pv_name, ZNAM="OFF", ONAM="ON")
+    else:
+        return builder.aIn(pv_name)
+
+
+def _create_and_link_read_pv(pv_name: str, attribute: AttrRead) -> None:
+    record = _get_input_record(pv_name, attribute.dtype)
 
     async def async_wrapper(v):
-        ai.set(v)
+        record.set(v)
 
     attribute.set_update_callback(async_wrapper)
 
 
-def create_and_link_write_pv(pv_name: str, attribute: AttrWrite) -> None:
-    builder.aOut(pv_name, always_update=True, on_update=attribute.process)
+def _get_output_record(pv_name: str, dtype: type, on_update: Callable) -> Any:
+    if dtype is bool:
+        return builder.boolOut(
+            pv_name, ZNAM="OFF", ONAM="ON", always_update=True, on_update=on_update
+        )
+    else:
+        return builder.aOut(pv_name, always_update=True, on_update=on_update)
 
 
-def create_and_link_command_pv(pv_name: str, method: Callable) -> None:
+def _create_and_link_write_pv(pv_name: str, attribute: AttrWrite) -> None:
+    _get_output_record(pv_name, attribute.dtype, on_update=attribute.process)
+
+
+def _create_and_link_command_pv(pv_name: str, method: Callable) -> None:
     async def wrapped_method(_: Any):
         await method()
 
@@ -45,14 +61,14 @@ def _create_and_link_attribute_pvs(mapping: Mapping) -> None:
             match attribute.mode:
                 case AttrMode.READ:
                     attribute = cast(AttrRead, attribute)
-                    create_and_link_read_pv(pv_name, attribute)
+                    _create_and_link_read_pv(pv_name, attribute)
                 case AttrMode.WRITE:
                     attribute = cast(AttrWrite, attribute)
-                    create_and_link_write_pv(pv_name, attribute)
+                    _create_and_link_write_pv(pv_name, attribute)
                 case AttrMode.READ_WRITE:
                     attribute = cast(AttrReadWrite, attribute)
-                    create_and_link_read_pv(pv_name + "_RBV", attribute)
-                    create_and_link_write_pv(pv_name, attribute)
+                    _create_and_link_read_pv(pv_name + "_RBV", attribute)
+                    _create_and_link_write_pv(pv_name, attribute)
 
 
 def _create_and_link_command_pvs(mapping: Mapping) -> None:
@@ -63,7 +79,7 @@ def _create_and_link_command_pvs(mapping: Mapping) -> None:
                 name = method_data.name.title().replace("_", "")
                 pv_name = path.upper() + ":" + name if path else name
 
-                create_and_link_command_pv(pv_name, method_data.method)
+                _create_and_link_command_pv(pv_name, method_data.method)
 
 
 class EpicsIOC:
