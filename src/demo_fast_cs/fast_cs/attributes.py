@@ -1,16 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Generic,
-    Optional,
-    Protocol,
-    TypeAlias,
-    TypeVar,
-)
+from typing import Any, Awaitable, Callable, Generic, Optional, Protocol, TypeVar
 
 ATTRIBUTE_TYPES = (
     int,
@@ -19,7 +10,7 @@ ATTRIBUTE_TYPES = (
 
 T = TypeVar("T", int, float)
 
-AttrCallback: TypeAlias = Callable[[T], Awaitable[None]]
+AttrCallback = Callable[[T], Awaitable[None]]
 
 
 class AttrMode(Enum):

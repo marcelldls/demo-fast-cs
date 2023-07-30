@@ -1,11 +1,11 @@
 from asyncio import iscoroutinefunction
 from enum import Enum
 from inspect import Signature, getdoc, signature
-from typing import Awaitable, Callable, TypeAlias
+from typing import Awaitable, Callable
 
 from .exceptions import FastCSException
 
-ScanCallback: TypeAlias = Callable[..., Awaitable[None]]
+ScanCallback = Callable[..., Awaitable[None]]
 
 
 class MethodType(Enum):
