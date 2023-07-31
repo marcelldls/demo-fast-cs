@@ -41,7 +41,14 @@ def _get_output_record(pv_name: str, dtype: type, on_update: Callable) -> Any:
 
 
 def _create_and_link_write_pv(pv_name: str, attribute: AttrWrite) -> None:
-    _get_output_record(pv_name, attribute.dtype, on_update=attribute.process)
+    record = _get_output_record(
+        pv_name, attribute.dtype, on_update=attribute.process_without_display_update
+    )
+
+    async def async_wrapper(v):
+        record.set(v)
+
+    attribute.set_write_display_callback(async_wrapper)
 
 
 def _create_and_link_command_pv(pv_name: str, method: Callable) -> None:

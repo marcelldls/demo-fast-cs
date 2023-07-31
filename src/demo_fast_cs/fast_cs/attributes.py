@@ -84,9 +84,16 @@ class AttrWrite(Attribute[T]):
     ) -> None:
         super().__init__(dtype, mode=mode, handler=handler)  # type: ignore
         self._process_callback: Optional[AttrCallback[T]] = None
+        self._write_display_callback: Optional[AttrCallback[T]] = None
         self._sender = handler
 
     async def process(self, value: T) -> None:
+        if self._write_display_callback is not None:
+            await self._write_display_callback(self._dtype(value))
+
+        await self.process_without_display_update(value)
+
+    async def process_without_display_update(self, value: T) -> None:
         if self._process_callback is not None:
             await self._process_callback(self._dtype(value))
 
@@ -95,6 +102,9 @@ class AttrWrite(Attribute[T]):
 
     def has_process_callback(self) -> bool:
         return self._process_callback is not None
+
+    def set_write_display_callback(self, callback: Optional[AttrCallback[T]]) -> None:
+        self._write_display_callback = callback
 
     @property
     def sender(self) -> Sender | None:
