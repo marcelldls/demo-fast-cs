@@ -18,8 +18,10 @@ class EpicsIOCOptions:
 def _get_input_record(pv_name: str, dtype: type) -> Any:
     if dtype is bool:
         return builder.boolIn(pv_name, ZNAM="OFF", ONAM="ON")
+    elif dtype is int:
+        return builder.longIn(pv_name)
     else:
-        return builder.aIn(pv_name)
+        return builder.aIn(pv_name, PREC=2)
 
 
 def _create_and_link_read_pv(pv_name: str, attribute: AttrRead) -> None:
@@ -36,8 +38,10 @@ def _get_output_record(pv_name: str, dtype: type, on_update: Callable) -> Any:
         return builder.boolOut(
             pv_name, ZNAM="OFF", ONAM="ON", always_update=True, on_update=on_update
         )
+    elif dtype is int:
+        return builder.longOut(pv_name, always_update=True, on_update=on_update)
     else:
-        return builder.aOut(pv_name, always_update=True, on_update=on_update)
+        return builder.aOut(pv_name, always_update=True, on_update=on_update, PREC=2)
 
 
 def _create_and_link_write_pv(pv_name: str, attribute: AttrWrite) -> None:

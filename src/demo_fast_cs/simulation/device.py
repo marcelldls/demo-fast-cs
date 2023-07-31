@@ -45,8 +45,8 @@ class TempControllerDevice(Device):
         default_end: float,
     ) -> None:
         self._num = num_ramp_controllers
-        self._start = np.full(num_ramp_controllers, default_start, dtype=float)
-        self._end = np.full(num_ramp_controllers, default_end, dtype=float)
+        self._start = np.full(num_ramp_controllers, default_start, dtype=int)
+        self._end = np.full(num_ramp_controllers, default_end, dtype=int)
         self._current = np.zeros(num_ramp_controllers, dtype=float)
         self._enabled = np.full(num_ramp_controllers, 0, dtype=int)
         self._start_times = np.full(num_ramp_controllers, -1, dtype=int)
@@ -59,18 +59,18 @@ class TempControllerDevice(Device):
     def get_start(self, index: int):
         return self._start[index]
 
-    def set_start(self, index: int, value: float):
+    def set_start(self, index: int, value: int):
         self._start[index] = value
 
     def get_end(self, index: int):
         return self._end[index]
 
-    def set_end(self, index: int, value: float):
+    def set_end(self, index: int, value: int):
         self._end[index] = value
 
     def set_enabled(self, index: int, value: int):
         if value:
-            self._current[index] = self._start[index]
+            self._current[index] = float(self._start[index])
             self._start_times[index] = -1
             self._enabled[index] = 1
         else:
@@ -147,7 +147,7 @@ class TempControllerAdapter(ComposedAdapter):
     @RegexCommand(r"S([0-9][0-9])=(\d+\.?\d*)", True, "utf-8")
     async def set_start(self, index: str, value: str) -> None:
         int_index = self._validate_index(index)
-        self.device.set_start(int_index, float(value))
+        self.device.set_start(int_index, int(value))
 
     @RegexCommand(r"E([0-9][0-9])\?", False, "utf-8")
     async def get_end(self, index: str) -> bytes:
@@ -157,7 +157,7 @@ class TempControllerAdapter(ComposedAdapter):
     @RegexCommand(r"E([0-9][0-9])=(\d+\.?\d*)", True, "utf-8")
     async def set_end(self, index: str, value: str) -> None:
         int_index = self._validate_index(index)
-        self.device.set_end(int_index, float(value))
+        self.device.set_end(int_index, int(value))
 
     @RegexCommand(r"R\?", False, "utf-8")
     async def get_ramp_rate(self) -> bytes:

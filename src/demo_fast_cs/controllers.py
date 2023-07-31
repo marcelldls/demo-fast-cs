@@ -75,8 +75,8 @@ class TempController(Controller):
 
 
 class TempRampController(SubController):
-    start = AttrReadWrite(float, handler=TempControllerHandler("S"))
-    end = AttrReadWrite(float, handler=TempControllerHandler("E"))
+    start = AttrReadWrite(int, handler=TempControllerHandler("S"))
+    end = AttrReadWrite(int, handler=TempControllerHandler("E"))
     current = AttrRead(float, handler=TempControllerHandler("T"))
     enabled = AttrReadWrite(bool, handler=TempControllerHandler("N"))
 
