@@ -6,6 +6,7 @@ from typing import Any
 from .fast_cs import Controller, SubController
 from .fast_cs.attributes import AttrR, AttrRW, AttrW
 from .fast_cs.connections import IPConnection, IPConnectionSettings
+from .fast_cs.datatypes import Bool, Float, Int
 from .fast_cs.wrappers import command
 
 
@@ -47,7 +48,7 @@ class TempControllerHandler:
 
 
 class TempController(Controller):
-    ramp_rate = AttrRW(float, handler=TempControllerHandler("R"))
+    ramp_rate = AttrRW(Float(), handler=TempControllerHandler("R"))
 
     def __init__(self, settings: TempControllerSettings) -> None:
         super().__init__()
@@ -75,10 +76,10 @@ class TempController(Controller):
 
 
 class TempRampController(SubController):
-    start = AttrRW(int, handler=TempControllerHandler("S"))
-    end = AttrRW(int, handler=TempControllerHandler("E"))
-    current = AttrR(float, handler=TempControllerHandler("T"))
-    enabled = AttrRW(bool, handler=TempControllerHandler("N"))
+    start = AttrRW(Int(), handler=TempControllerHandler("S"))
+    end = AttrRW(Int(), handler=TempControllerHandler("E"))
+    current = AttrR(Float(), handler=TempControllerHandler("T"))
+    enabled = AttrRW(Bool(), handler=TempControllerHandler("N"))
 
     def __init__(self, index: int, conn: IPConnection) -> None:
         self.suffix = f"{index:02d}"

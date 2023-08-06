@@ -1,13 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Awaitable, Callable, Generic, Optional, Protocol, TypeVar
+from typing import Any, Generic, Optional, Protocol
 
-T = TypeVar("T", int, float, bool)
-ATTRIBUTE_TYPES: tuple[type] = T.__constraints__  # type: ignore
-
-
-AttrCallback = Callable[[T], Awaitable[None]]
+from .datatypes import ATTRIBUTE_TYPES, AttrCallback, DataType, T
 
 
 class AttrMode(Enum):
@@ -33,16 +29,18 @@ class Handler(Sender, Updater, Protocol):
 
 
 class Attribute(Generic[T]):
-    def __init__(self, dtype: type[T], mode: AttrMode, handler: Any = None) -> None:
+    def __init__(
+        self, datatype: DataType[T], mode: AttrMode, handler: Any = None
+    ) -> None:
         assert (
-            dtype in ATTRIBUTE_TYPES
-        ), f"Attribute type must be one of {ATTRIBUTE_TYPES}, received type {dtype}"
-        self._dtype: type[T] = dtype
+            datatype.dtype in ATTRIBUTE_TYPES
+        ), f"Attr type must be one of {ATTRIBUTE_TYPES}, received type {datatype.dtype}"
+        self._datatype: DataType[T] = datatype
         self._mode: AttrMode = mode
 
     @property
     def dtype(self) -> type[T]:
-        return self._dtype
+        return self._datatype.dtype
 
     @property
     def mode(self) -> AttrMode:
@@ -52,12 +50,12 @@ class Attribute(Generic[T]):
 class AttrR(Attribute[T]):
     def __init__(
         self,
-        dtype: type[T],
+        datatype: DataType[T],
         mode=AttrMode.READ,
         handler: Updater | None = None,
     ) -> None:
-        super().__init__(dtype, mode=mode, handler=handler)  # type: ignore
-        self._value: T = dtype()
+        super().__init__(datatype, mode=mode, handler=handler)  # type: ignore
+        self._value: T = datatype.dtype()
         self._update_callback: Optional[AttrCallback[T]] = None
         self._updater = handler
 
@@ -65,7 +63,7 @@ class AttrR(Attribute[T]):
         return self._value
 
     async def set(self, value: T) -> None:
-        self._value = self._dtype(value)
+        self._value = self._datatype.dtype(value)
 
         if self._update_callback is not None:
             await self._update_callback(self._value)
@@ -80,22 +78,22 @@ class AttrR(Attribute[T]):
 
 class AttrW(Attribute[T]):
     def __init__(
-        self, dtype: type[T], mode=AttrMode.WRITE, handler: Sender | None = None
+        self, datatype: DataType[T], mode=AttrMode.WRITE, handler: Sender | None = None
     ) -> None:
-        super().__init__(dtype, mode=mode, handler=handler)  # type: ignore
+        super().__init__(datatype, mode=mode, handler=handler)  # type: ignore
         self._process_callback: Optional[AttrCallback[T]] = None
         self._write_display_callback: Optional[AttrCallback[T]] = None
         self._sender = handler
 
     async def process(self, value: T) -> None:
         if self._write_display_callback is not None:
-            await self._write_display_callback(self._dtype(value))
+            await self._write_display_callback(self._datatype.dtype(value))
 
         await self.process_without_display_update(value)
 
     async def process_without_display_update(self, value: T) -> None:
         if self._process_callback is not None:
-            await self._process_callback(self._dtype(value))
+            await self._process_callback(self._datatype.dtype(value))
 
     def set_process_callback(self, callback: Optional[AttrCallback[T]]) -> None:
         self._process_callback = callback
@@ -113,9 +111,12 @@ class AttrW(Attribute[T]):
 
 class AttrRW(AttrW[T], AttrR[T]):
     def __init__(
-        self, dtype: type[T], mode=AttrMode.READ_WRITE, handler: Handler | None = None
+        self,
+        datatype: DataType[T],
+        mode=AttrMode.READ_WRITE,
+        handler: Handler | None = None,
     ) -> None:
-        super().__init__(dtype, mode=mode, handler=handler)  # type: ignore
+        super().__init__(datatype, mode=mode, handler=handler)  # type: ignore
 
     async def process(self, value: T) -> None:
         await self.set(value)
