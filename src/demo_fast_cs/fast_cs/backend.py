@@ -7,11 +7,9 @@ from .cs_methods import MethodType
 from .mapping import Mapping, MethodData, SingleMapping
 
 
-def get_initial_tasks(mapping: Mapping) -> list[Callable]:
+def _get_initial_tasks(mapping: Mapping) -> list[Callable]:
     initial_tasks: list[Callable] = []
-
     initial_tasks.append(mapping.controller.connect)
-
     return initial_tasks
 
 
@@ -74,7 +72,7 @@ def _add_updater_scan_tasks(
             scan_dict[attribute.updater.update_period].append(callback)
 
 
-def get_scan_tasks(mapping: Mapping) -> list[Callable]:
+def _get_scan_tasks(mapping: Mapping) -> list[Callable]:
     scan_dict: dict[float, list[Callable]] = defaultdict(list)
 
     for single_mapping in mapping.get_controller_mappings():
@@ -129,7 +127,25 @@ def _link_attribute_sender_class(single_mapping: SingleMapping) -> None:
             attribute.set_process_callback(callback)
 
 
-def link_process_tasks(mapping: Mapping) -> None:
-    for single_mapping in mapping.get_controller_mappings():
-        _link_single_controller_put_tasks(single_mapping)
-        _link_attribute_sender_class(single_mapping)
+class Backend:
+    def __init__(self, mapping: Mapping, loop: asyncio.AbstractEventLoop):
+        self._mapping = mapping
+        self._loop = loop
+
+    def link_process_tasks(self):
+        for single_mapping in self._mapping.get_controller_mappings():
+            _link_single_controller_put_tasks(single_mapping)
+            _link_attribute_sender_class(single_mapping)
+
+    def run_initial_tasks(self):
+        initial_tasks = _get_initial_tasks(self._mapping)
+
+        for task in initial_tasks:
+            future = asyncio.run_coroutine_threadsafe(task(), self._loop)
+            future.result()
+
+    def start_scan_tasks(self):
+        scan_tasks = _get_scan_tasks(self._mapping)
+
+        for task in scan_tasks:
+            asyncio.run_coroutine_threadsafe(task(), self._loop)

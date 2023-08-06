@@ -1,11 +1,10 @@
-import asyncio
 from dataclasses import dataclass
 from typing import Any, Callable, Optional, cast
 
 from softioc import asyncio_dispatcher, builder, softioc
 
 from ..fast_cs.attributes import AttrMode, AttrR, AttrRW, AttrW
-from ..fast_cs.backend import get_initial_tasks, get_scan_tasks, link_process_tasks
+from ..fast_cs.backend import Backend
 from ..fast_cs.cs_methods import MethodType
 from ..fast_cs.mapping import Mapping
 
@@ -103,6 +102,7 @@ class EpicsIOC:
 
         # Create an asyncio dispatcher; the event loop is now running
         dispatcher = asyncio_dispatcher.AsyncioDispatcher()
+        backend = Backend(self._mapping, dispatcher.loop)
 
         # Set the record prefix
         builder.SetDeviceName("MY-DEVICE-PREFIX")
@@ -115,18 +115,9 @@ class EpicsIOC:
         builder.LoadDatabase()
         softioc.iocInit(dispatcher)
 
-        link_process_tasks(self._mapping)
-
-        initial_tasks = get_initial_tasks(self._mapping)
-
-        for task in initial_tasks:
-            future = asyncio.run_coroutine_threadsafe(task(), dispatcher.loop)
-            future.result()
-
-        scan_tasks = get_scan_tasks(self._mapping)
-
-        for task in scan_tasks:
-            dispatcher(task)
+        backend.link_process_tasks()
+        backend.run_initial_tasks()
+        backend.start_scan_tasks()
 
         # Run the interactive shell
         global_variables = globals()

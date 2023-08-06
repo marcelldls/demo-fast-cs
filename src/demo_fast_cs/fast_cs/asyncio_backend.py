@@ -1,8 +1,6 @@
-import asyncio
-
 from softioc import asyncio_dispatcher, softioc
 
-from .backend import get_initial_tasks, get_scan_tasks, link_process_tasks
+from .backend import Backend
 from .mapping import Mapping
 
 
@@ -14,18 +12,11 @@ class AsyncioBackend:
         # Create an asyncio dispatcher; the event loop is now running
         dispatcher = asyncio_dispatcher.AsyncioDispatcher()
 
-        link_process_tasks(self._mapping)
+        backend = Backend(self._mapping, dispatcher.loop)
 
-        initial_tasks = get_initial_tasks(self._mapping)
-
-        for task in initial_tasks:
-            future = asyncio.run_coroutine_threadsafe(task(), dispatcher.loop)
-            future.result()
-
-        scan_tasks = get_scan_tasks(self._mapping)
-
-        for task in scan_tasks:
-            dispatcher(task)
+        backend.link_process_tasks()
+        backend.run_initial_tasks()
+        backend.start_scan_tasks()
 
         # Run the interactive shell
         global_variables = globals()
