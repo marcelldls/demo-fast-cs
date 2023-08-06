@@ -4,25 +4,13 @@ from typing import Callable, cast
 
 from .attributes import AttrCallback, AttrMode, AttrR, AttrW
 from .cs_methods import MethodType
-from .mapping import Mapping, MethodData, SingleMapping
+from .mapping import Mapping, SingleMapping
 
 
 def _get_initial_tasks(mapping: Mapping) -> list[Callable]:
     initial_tasks: list[Callable] = []
     initial_tasks.append(mapping.controller.connect)
     return initial_tasks
-
-
-def _get_scan_method(method_data: MethodData) -> tuple[float, Callable]:
-    period = method_data.info.kwargs["period"]
-    method = method_data.method
-
-    async def scan_method() -> None:
-        while True:
-            await method()
-            await asyncio.sleep(period)
-
-    return period, scan_method
 
 
 def _create_periodic_scan_task(period, methods: list[Callable]) -> Callable:
@@ -47,7 +35,8 @@ def _add_wrapped_scan_tasks(
 ):
     for method_data in single_mapping.methods:
         if method_data.info.method_type == MethodType.scan:
-            period, method = _get_scan_method(method_data)
+            period = method_data.info.kwargs["period"]
+            method = method_data.method
             scan_dict[period].append(method)
 
 
