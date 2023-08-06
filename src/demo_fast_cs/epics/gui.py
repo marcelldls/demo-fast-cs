@@ -26,6 +26,7 @@ from pvi.device import (
 
 from ..fast_cs.attributes import Attribute, AttrMode
 from ..fast_cs.cs_methods import MethodType
+from ..fast_cs.datatypes import DataType
 from ..fast_cs.exceptions import FastCSException
 from ..fast_cs.mapping import Mapping
 
@@ -58,15 +59,15 @@ class EpicsGUI:
         return pv
 
     @staticmethod
-    def _get_read_widget(dtype: type) -> ReadWidget:
-        if dtype is bool:
+    def _get_read_widget(datatype: DataType) -> ReadWidget:
+        if datatype.dtype is bool:
             return LED()
         else:
             return TextRead()
 
     @staticmethod
-    def _get_write_widget(dtype: type) -> WriteWidget:
-        if dtype is bool:
+    def _get_write_widget(datatype: DataType) -> WriteWidget:
+        if datatype.dtype is bool:
             return CheckBox()
         else:
             return TextWrite()
@@ -78,14 +79,14 @@ class EpicsGUI:
 
         match attribute.mode:
             case AttrMode.READ:
-                read_widget = cls._get_read_widget(attribute.dtype)
+                read_widget = cls._get_read_widget(attribute.datatype)
                 return SignalR(name, pv, read_widget)
             case AttrMode.WRITE:
-                write_widget = cls._get_write_widget(attribute.dtype)
+                write_widget = cls._get_write_widget(attribute.datatype)
                 return SignalW(name, pv, TextWrite())
             case AttrMode.READ_WRITE:
-                read_widget = cls._get_read_widget(attribute.dtype)
-                write_widget = cls._get_write_widget(attribute.dtype)
+                read_widget = cls._get_read_widget(attribute.datatype)
+                write_widget = cls._get_write_widget(attribute.datatype)
                 return SignalRW(name, pv, write_widget, pv + "_RBV", read_widget)
 
     @classmethod

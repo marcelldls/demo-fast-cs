@@ -39,6 +39,10 @@ class Attribute(Generic[T]):
         self._mode: AttrMode = mode
 
     @property
+    def datatype(self) -> DataType[T]:
+        return self._datatype
+
+    @property
     def dtype(self) -> type[T]:
         return self._datatype.dtype
 

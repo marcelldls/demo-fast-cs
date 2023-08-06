@@ -15,19 +15,16 @@ class DataType(Generic[T]):
 @dataclass(frozen=True)
 class Int(DataType[int]):
     dtype: ClassVar[type] = int
-    min: int | None = None
-    max: int | None = None
 
 
 @dataclass(frozen=True)
 class Float(DataType[float]):
     dtype: ClassVar[type] = float
-    min: float | None = None
-    max: float | None = None
+    prec: int = 2
 
 
 @dataclass(frozen=True)
 class Bool(DataType[bool]):
     dtype: ClassVar[type] = bool
-    zval: str = "OFF"
-    oval: str = "ON"
+    znam: str = "OFF"
+    onam: str = "ON"

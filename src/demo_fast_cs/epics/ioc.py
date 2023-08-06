@@ -6,6 +6,7 @@ from softioc import asyncio_dispatcher, builder, softioc
 from ..fast_cs.attributes import AttrMode, AttrR, AttrRW, AttrW
 from ..fast_cs.backend import Backend
 from ..fast_cs.cs_methods import MethodType
+from ..fast_cs.datatypes import Bool, DataType, Float, Int
 from ..fast_cs.mapping import Mapping
 
 
@@ -14,17 +15,17 @@ class EpicsIOCOptions:
     terminal: bool = True
 
 
-def _get_input_record(pv_name: str, dtype: type) -> Any:
-    if dtype is bool:
-        return builder.boolIn(pv_name, ZNAM="OFF", ONAM="ON")
-    elif dtype is int:
+def _get_input_record(pv_name: str, datatype: DataType) -> Any:
+    if isinstance(datatype, Bool):
+        return builder.boolIn(pv_name, ZNAM=datatype.znam, ONAM=datatype.onam)
+    elif isinstance(datatype, Int):
         return builder.longIn(pv_name)
-    else:
-        return builder.aIn(pv_name, PREC=2)
+    elif isinstance(datatype, Float):
+        return builder.aIn(pv_name, PREC=datatype.prec)
 
 
 def _create_and_link_read_pv(pv_name: str, attribute: AttrR) -> None:
-    record = _get_input_record(pv_name, attribute.dtype)
+    record = _get_input_record(pv_name, attribute._datatype)
 
     async def async_wrapper(v):
         record.set(v)
@@ -32,20 +33,24 @@ def _create_and_link_read_pv(pv_name: str, attribute: AttrR) -> None:
     attribute.set_update_callback(async_wrapper)
 
 
-def _get_output_record(pv_name: str, dtype: type, on_update: Callable) -> Any:
-    if dtype is bool:
+def _get_output_record(pv_name: str, datatype: DataType, on_update: Callable) -> Any:
+    if isinstance(datatype, Bool):
         return builder.boolOut(
-            pv_name, ZNAM="OFF", ONAM="ON", always_update=True, on_update=on_update
+            pv_name,
+            ZNAM=datatype.znam,
+            ONAM=datatype.onam,
+            always_update=True,
+            on_update=on_update,
         )
-    elif dtype is int:
+    elif isinstance(datatype, Int):
         return builder.longOut(pv_name, always_update=True, on_update=on_update)
-    else:
+    elif isinstance(datatype, Float):
         return builder.aOut(pv_name, always_update=True, on_update=on_update, PREC=2)
 
 
 def _create_and_link_write_pv(pv_name: str, attribute: AttrW) -> None:
     record = _get_output_record(
-        pv_name, attribute.dtype, on_update=attribute.process_without_display_update
+        pv_name, attribute.datatype, on_update=attribute.process_without_display_update
     )
 
     async def async_wrapper(v):
