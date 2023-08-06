@@ -78,8 +78,8 @@ class TempController(Controller):
 class TempRampController(SubController):
     start = AttrRW(Int(), handler=TempControllerHandler("S"))
     end = AttrRW(Int(), handler=TempControllerHandler("E"))
-    current = AttrR(Float(), handler=TempControllerHandler("T"))
-    enabled = AttrRW(Bool(), handler=TempControllerHandler("N"))
+    current = AttrR(Float(prec=3), handler=TempControllerHandler("T"))
+    enabled = AttrRW(Bool(znam="Off", onam="On"), handler=TempControllerHandler("N"))
 
     def __init__(self, index: int, conn: IPConnection) -> None:
         self.suffix = f"{index:02d}"
