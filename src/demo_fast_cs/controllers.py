@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .fast_cs import Controller, SubController
-from .fast_cs.attributes import AttrRead, AttrReadWrite, AttrWrite
+from .fast_cs.attributes import AttrR, AttrRW, AttrW
 from .fast_cs.connections import IPConnection, IPConnectionSettings
 from .fast_cs.wrappers import command
 
@@ -23,7 +23,7 @@ class TempControllerHandler:
     async def put(
         self,
         controller: TempController | TempRampController,
-        attr: AttrWrite,
+        attr: AttrW,
         value: Any,
     ) -> None:
         if attr.dtype is bool:
@@ -35,7 +35,7 @@ class TempControllerHandler:
     async def update(
         self,
         controller: TempController | TempRampController,
-        attr: AttrRead,
+        attr: AttrR,
     ) -> None:
         response = await controller.conn.send_query(
             f"{self.name}{controller.suffix}?\r\n"
@@ -47,7 +47,7 @@ class TempControllerHandler:
 
 
 class TempController(Controller):
-    ramp_rate = AttrReadWrite(float, handler=TempControllerHandler("R"))
+    ramp_rate = AttrRW(float, handler=TempControllerHandler("R"))
 
     def __init__(self, settings: TempControllerSettings) -> None:
         super().__init__()
@@ -75,10 +75,10 @@ class TempController(Controller):
 
 
 class TempRampController(SubController):
-    start = AttrReadWrite(int, handler=TempControllerHandler("S"))
-    end = AttrReadWrite(int, handler=TempControllerHandler("E"))
-    current = AttrRead(float, handler=TempControllerHandler("T"))
-    enabled = AttrReadWrite(bool, handler=TempControllerHandler("N"))
+    start = AttrRW(int, handler=TempControllerHandler("S"))
+    end = AttrRW(int, handler=TempControllerHandler("E"))
+    current = AttrR(float, handler=TempControllerHandler("T"))
+    enabled = AttrRW(bool, handler=TempControllerHandler("N"))
 
     def __init__(self, index: int, conn: IPConnection) -> None:
         self.suffix = f"{index:02d}"

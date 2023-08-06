@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, cast
 
 from softioc import asyncio_dispatcher, builder, softioc
 
-from ..fast_cs.attributes import AttrMode, AttrRead, AttrReadWrite, AttrWrite
+from ..fast_cs.attributes import AttrMode, AttrR, AttrRW, AttrW
 from ..fast_cs.backend import get_initial_tasks, get_scan_tasks, link_process_tasks
 from ..fast_cs.cs_methods import MethodType
 from ..fast_cs.mapping import Mapping
@@ -24,7 +24,7 @@ def _get_input_record(pv_name: str, dtype: type) -> Any:
         return builder.aIn(pv_name, PREC=2)
 
 
-def _create_and_link_read_pv(pv_name: str, attribute: AttrRead) -> None:
+def _create_and_link_read_pv(pv_name: str, attribute: AttrR) -> None:
     record = _get_input_record(pv_name, attribute.dtype)
 
     async def async_wrapper(v):
@@ -44,7 +44,7 @@ def _get_output_record(pv_name: str, dtype: type, on_update: Callable) -> Any:
         return builder.aOut(pv_name, always_update=True, on_update=on_update, PREC=2)
 
 
-def _create_and_link_write_pv(pv_name: str, attribute: AttrWrite) -> None:
+def _create_and_link_write_pv(pv_name: str, attribute: AttrW) -> None:
     record = _get_output_record(
         pv_name, attribute.dtype, on_update=attribute.process_without_display_update
     )
@@ -71,13 +71,13 @@ def _create_and_link_attribute_pvs(mapping: Mapping) -> None:
 
             match attribute.mode:
                 case AttrMode.READ:
-                    attribute = cast(AttrRead, attribute)
+                    attribute = cast(AttrR, attribute)
                     _create_and_link_read_pv(pv_name, attribute)
                 case AttrMode.WRITE:
-                    attribute = cast(AttrWrite, attribute)
+                    attribute = cast(AttrW, attribute)
                     _create_and_link_write_pv(pv_name, attribute)
                 case AttrMode.READ_WRITE:
-                    attribute = cast(AttrReadWrite, attribute)
+                    attribute = cast(AttrRW, attribute)
                     _create_and_link_read_pv(pv_name + "_RBV", attribute)
                     _create_and_link_write_pv(pv_name, attribute)
 

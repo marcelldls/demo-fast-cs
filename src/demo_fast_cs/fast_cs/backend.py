@@ -2,7 +2,7 @@ import asyncio
 from collections import defaultdict
 from typing import Callable, cast
 
-from .attributes import AttrCallback, AttrMode, AttrRead, AttrWrite
+from .attributes import AttrCallback, AttrMode, AttrR, AttrW
 from .cs_methods import MethodType
 from .mapping import Mapping, MethodData, SingleMapping
 
@@ -65,7 +65,7 @@ def _add_updater_scan_tasks(
 ):
     for attribute in single_mapping.attributes.values():
         if attribute.mode in (AttrMode.READ, AttrMode.READ_WRITE):
-            attribute = cast(AttrRead, attribute)
+            attribute = cast(AttrR, attribute)
 
             if attribute.updater is None:
                 continue
@@ -101,7 +101,7 @@ def _link_single_controller_put_tasks(single_mapping: SingleMapping):
             AttrMode.WRITE,
             AttrMode.READ_WRITE,
         ], f"Mode {attribute.mode} does not support put operations for {name}"
-        attribute = cast(AttrWrite, attribute)
+        attribute = cast(AttrW, attribute)
 
         attribute.set_process_callback(method)
 
@@ -116,7 +116,7 @@ def _create_sender_callback(attribute, controller):
 def _link_attribute_sender_class(single_mapping: SingleMapping) -> None:
     for attr_name, attribute in single_mapping.attributes.items():
         if attribute.mode in (AttrMode.WRITE, AttrMode.READ_WRITE):
-            attribute = cast(AttrWrite, attribute)
+            attribute = cast(AttrW, attribute)
 
             if attribute.sender is None:
                 continue

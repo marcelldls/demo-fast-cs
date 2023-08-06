@@ -17,14 +17,14 @@ class AttrMode(Enum):
 
 
 class Sender(Protocol):
-    async def put(self, controller: Any, attr: AttrWrite, value: Any) -> None:
+    async def put(self, controller: Any, attr: AttrW, value: Any) -> None:
         pass
 
 
 class Updater(Protocol):
     update_period: float
 
-    async def update(self, controller: Any, attr: AttrRead) -> None:
+    async def update(self, controller: Any, attr: AttrR) -> None:
         pass
 
 
@@ -49,7 +49,7 @@ class Attribute(Generic[T]):
         return self._mode
 
 
-class AttrRead(Attribute[T]):
+class AttrR(Attribute[T]):
     def __init__(
         self,
         dtype: type[T],
@@ -78,7 +78,7 @@ class AttrRead(Attribute[T]):
         return self._updater
 
 
-class AttrWrite(Attribute[T]):
+class AttrW(Attribute[T]):
     def __init__(
         self, dtype: type[T], mode=AttrMode.WRITE, handler: Sender | None = None
     ) -> None:
@@ -111,7 +111,7 @@ class AttrWrite(Attribute[T]):
         return self._sender
 
 
-class AttrReadWrite(AttrWrite[T], AttrRead[T]):
+class AttrRW(AttrW[T], AttrR[T]):
     def __init__(
         self, dtype: type[T], mode=AttrMode.READ_WRITE, handler: Handler | None = None
     ) -> None:
