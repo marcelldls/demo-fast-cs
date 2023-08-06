@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 from pvi._format import Formatter
 from pvi._format.base import Formatter
@@ -96,7 +95,7 @@ class EpicsGUI:
 
         return SignalX(name, pv, value=1)
 
-    def create_gui(self, options: Optional[EpicsGUIOptions] = None) -> None:
+    def create_gui(self, options: EpicsGUIOptions | None = None) -> None:
         if options is None:
             options = EpicsGUIOptions()
 

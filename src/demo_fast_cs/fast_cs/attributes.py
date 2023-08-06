@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Generic, Optional, Protocol
+from typing import Any, Generic, Protocol
 
 from .datatypes import ATTRIBUTE_TYPES, AttrCallback, DataType, T
 
@@ -60,7 +60,7 @@ class AttrR(Attribute[T]):
     ) -> None:
         super().__init__(datatype, mode=mode, handler=handler)  # type: ignore
         self._value: T = datatype.dtype()
-        self._update_callback: Optional[AttrCallback[T]] = None
+        self._update_callback: AttrCallback[T] | None = None
         self._updater = handler
 
     def get(self) -> T:
@@ -72,7 +72,7 @@ class AttrR(Attribute[T]):
         if self._update_callback is not None:
             await self._update_callback(self._value)
 
-    def set_update_callback(self, callback: Optional[AttrCallback[T]]) -> None:
+    def set_update_callback(self, callback: AttrCallback[T] | None) -> None:
         self._update_callback = callback
 
     @property
@@ -85,8 +85,8 @@ class AttrW(Attribute[T]):
         self, datatype: DataType[T], mode=AttrMode.WRITE, handler: Sender | None = None
     ) -> None:
         super().__init__(datatype, mode=mode, handler=handler)  # type: ignore
-        self._process_callback: Optional[AttrCallback[T]] = None
-        self._write_display_callback: Optional[AttrCallback[T]] = None
+        self._process_callback: AttrCallback[T] | None = None
+        self._write_display_callback: AttrCallback[T] | None = None
         self._sender = handler
 
     async def process(self, value: T) -> None:
@@ -99,13 +99,13 @@ class AttrW(Attribute[T]):
         if self._process_callback is not None:
             await self._process_callback(self._datatype.dtype(value))
 
-    def set_process_callback(self, callback: Optional[AttrCallback[T]]) -> None:
+    def set_process_callback(self, callback: AttrCallback[T] | None) -> None:
         self._process_callback = callback
 
     def has_process_callback(self) -> bool:
         return self._process_callback is not None
 
-    def set_write_display_callback(self, callback: Optional[AttrCallback[T]]) -> None:
+    def set_write_display_callback(self, callback: AttrCallback[T] | None) -> None:
         self._write_display_callback = callback
 
     @property

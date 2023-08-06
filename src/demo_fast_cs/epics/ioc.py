@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, cast
 
 from softioc import asyncio_dispatcher, builder, softioc
 
@@ -101,7 +101,7 @@ class EpicsIOC:
     def __init__(self, mapping: Mapping):
         self._mapping = mapping
 
-    def run(self, options: Optional[EpicsIOCOptions] = None) -> None:
+    def run(self, options: EpicsIOCOptions | None = None) -> None:
         if options is None:
             options = EpicsIOCOptions()
 
