@@ -1,12 +1,11 @@
+from fastcs.backends import AsyncioBackend, EpicsBackend
+from fastcs.mapping import Mapping
+
 from demo_fast_cs.controllers import (
     IPConnectionSettings,
     TempController,
     TempControllerSettings,
 )
-
-from .epics.backend import EpicsBackend
-from .fast_cs.asyncio_backend import AsyncioBackend
-from .fast_cs.mapping import Mapping
 
 
 def get_controller() -> TempController:

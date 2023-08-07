@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .fast_cs import Controller, SubController
-from .fast_cs.attributes import AttrR, AttrRW, AttrW
-from .fast_cs.connections import IPConnection, IPConnectionSettings
-from .fast_cs.datatypes import Bool, Float, Int
-from .fast_cs.wrappers import command
+from fastcs.attributes import AttrR, AttrRW, AttrW
+from fastcs.connections import IPConnection, IPConnectionSettings
+from fastcs.controller import Controller, SubController
+from fastcs.datatypes import Bool, Float, Int
+from fastcs.wrappers import command
 
 
 @dataclass
