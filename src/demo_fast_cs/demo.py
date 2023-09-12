@@ -1,4 +1,4 @@
-from fastcs.backends import AsyncioBackend, EpicsBackend
+from fastcs.backends import AsyncioBackend, EpicsBackend, TangoBackend
 from fastcs.mapping import Mapping
 
 from demo_fast_cs.controllers import (
@@ -68,6 +68,15 @@ def test_ioc() -> None:
     ioc.run()
 
 
+def test_dsr() -> None:
+    tcont = get_controller()
+    m = Mapping(tcont)
+    backend = TangoBackend(m)
+    dsr = backend.get_dsr()
+
+    dsr.run()
+
+
 def test_asyncio_backend() -> None:
     tcont = get_controller()
     m = Mapping(tcont)
@@ -79,4 +88,5 @@ def main() -> None:
     # asyncio.run(test_ip_conn())
     # test_asyncio_backend()
     create_gui()
-    test_ioc()
+    # test_ioc()
+    test_dsr()
