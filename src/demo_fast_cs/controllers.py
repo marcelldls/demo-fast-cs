@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any
 
@@ -41,6 +42,7 @@ class TempControllerHandler:
         response = await controller.conn.send_query(
             f"{self.name}{controller.suffix}?\r\n"
         )
+
         if attr.dtype is bool:
             await attr.set(int(response))
         else:
@@ -67,6 +69,8 @@ class TempController(Controller):
     async def cancel_all(self) -> None:
         for rc in self._ramp_controllers:
             await rc.enabled.process(False)
+            # TODO: The requests all get concatenated if they are sent too quickly?
+            await asyncio.sleep(0.1)
 
     async def connect(self) -> None:
         await self.conn.connect(self._settings.ip_settings)
