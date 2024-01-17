@@ -1,7 +1,14 @@
 API
 ===
 
-.. automodule:: demo_fast_cs
+.. toctree::
+
+.. autosummary::
+    :toctree: _autosummary
+    :template: custom-module-template.rst
+    :recursive:
+
+    demo_fast_cs
 
     ``demo_fast_cs``
     -----------------------------------

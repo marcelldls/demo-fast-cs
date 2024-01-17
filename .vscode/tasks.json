@@ -8,9 +8,46 @@
             "label": "Tests, lint and docs",
             "command": "tox -p",
             "options": {
-                "cwd": "${workspaceRoot}"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [],
-        }
+        },
+        {
+            "type": "shell",
+            "label": "Open docs",
+            "command": "firefox build/html/index.html",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+        },
+        {
+            "type": "process",
+            "label": "Run simulation",
+            "command": "python",
+            "args": [
+                "-m",
+                "tickit",
+                "all",
+                "./src/demo_fast_cs/simulation/temp_controller.yaml",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+        },
+        {
+            "type": "process",
+            "label": "Connect to simulation",
+            "command": "nc",
+            "args": [
+                "localhost",
+                "25565",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+        },
     ]
 }
