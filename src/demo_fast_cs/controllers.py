@@ -65,7 +65,7 @@ class TempController(Controller):
             self._ramp_controllers.append(controller)
             self.register_sub_controller(controller)
 
-    @command
+    @command()
     async def cancel_all(self) -> None:
         for rc in self._ramp_controllers:
             await rc.enabled.process(False)
