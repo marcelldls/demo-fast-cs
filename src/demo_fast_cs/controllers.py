@@ -50,7 +50,7 @@ class TempControllerHandler:
 
 
 class TempController(Controller):
-    ramp_rate = AttrRW(Float(), handler=TempControllerHandler("R"))
+    ramp_rate = AttrRW(Float(), handler=TempControllerHandler("R"), group="Config")
 
     def __init__(self, settings: TempControllerSettings) -> None:
         super().__init__()
@@ -80,12 +80,12 @@ class TempController(Controller):
 
 
 class TempRampController(SubController):
-    start = AttrRW(Int(), handler=TempControllerHandler("S"))
-    end = AttrRW(Int(), handler=TempControllerHandler("E"))
-    current = AttrR(Float(prec=3), handler=TempControllerHandler("T"))
+    start = AttrRW(Int(), handler=TempControllerHandler("S"), group="Config")
+    end = AttrRW(Int(), handler=TempControllerHandler("E"), group="Config")
+    current = AttrR(Float(prec=3), handler=TempControllerHandler("T"), group="Status")
     enabled = AttrRW(Bool(znam="Off", onam="On"), handler=TempControllerHandler("N"))
 
     def __init__(self, index: int, conn: IPConnection) -> None:
         self.suffix = f"{index:02d}"
-        super().__init__(f"ramp{self.suffix}")
+        super().__init__(f"Ramp{self.suffix}")
         self.conn = conn
