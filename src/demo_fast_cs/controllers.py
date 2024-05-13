@@ -1,91 +1,109 @@
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
-from fastcs.attributes import AttrR, AttrRW, AttrW
-from fastcs.connections import IPConnection, IPConnectionSettings
-from fastcs.controller import Controller, SubController
-from fastcs.datatypes import Bool, Float, Int
-from fastcs.wrappers import command
-
-
-@dataclass
-class TempControllerSettings:
-    num_ramp_controllers: int
-    ip_settings: IPConnectionSettings
+from fastcs.attributes import AttrR, AttrW
+from fastcs.connections.serial_connection import (
+    SerialConnection,
+    SerialConnectionSettings,
+)
+from fastcs.controller import Controller
+from fastcs.datatypes import Bool
 
 
 @dataclass
-class TempControllerHandler:
-    name: str
-    update_period: float = 0.2
+class ThorlabsMFFSettings:
+    serial_settings: SerialConnectionSettings
+
+
+class ThorlabsAPTProtocol:
+
+    def get_info(self) -> bytes:
+        return b'\x05\x00\x00\x00\x50\x01'
+
+    def get_position(self) -> bytes:
+        return b'\x29\x04\x00\x00\x50\x01'
+
+    def read_position(self, responce: bytes) -> bool:
+        return bool(int(responce[8])-1)
+
+    def set_position(self, desired: bool) -> bytes:
+        if desired:
+            return b'\x6A\x04\x00\x02\x50\x01'
+        else:
+            return b'\x6A\x04\x00\x01\x50\x01'
+
+
+protocol = ThorlabsAPTProtocol()
+
+
+@dataclass
+class ThorlabsMFFHandlerW:
+    cmd: Callable
 
     async def put(
         self,
-        controller: TempController | TempRampController,
+        controller: ThorlabsMFF,
         attr: AttrW,
         value: Any,
     ) -> None:
         if attr.dtype is bool:
             value = int(value)
         await controller.conn.send_command(
-            f"{self.name}{controller.suffix}={value}\r\n"
+            self.cmd(value),
         )
+
+
+@dataclass
+class ThorlabsMFFHandlerR:
+    cmd: Callable
+    response_size: int
+    response_handler: Callable
+    update_period: float = 0.2
 
     async def update(
         self,
-        controller: TempController | TempRampController,
+        controller: ThorlabsMFF,
         attr: AttrR,
     ) -> None:
         response = await controller.conn.send_query(
-            f"{self.name}{controller.suffix}?\r\n"
+            self.cmd(),
+            self.response_size,
         )
-
+        response = self.response_handler(response)
         if attr.dtype is bool:
             await attr.set(int(response))
         else:
             await attr.set(response)
 
 
-class TempController(Controller):
-    ramp_rate = AttrRW(Float(), handler=TempControllerHandler("R"), group="Config")
+class ThorlabsMFF(Controller):
+    position = AttrR(
+        Bool(znam="Disabled", onam="Enabled"),
+        handler=ThorlabsMFFHandlerR(
+            protocol.get_position,
+            12,
+            protocol.read_position,
+            update_period=0.2,
+            ),
+        )
+    desired = AttrW(
+        Bool(znam="Disabled", onam="Enabled"),
+        handler=ThorlabsMFFHandlerW(
+            protocol.set_position,
+            ),
+        )
 
-    def __init__(self, settings: TempControllerSettings) -> None:
+    def __init__(self, settings: ThorlabsMFFSettings) -> None:
         super().__init__()
 
         self.suffix = ""
         self._settings = settings
-        self.conn = IPConnection()
-
-        self._ramp_controllers: list[TempRampController] = []
-        for index in range(1, settings.num_ramp_controllers + 1):
-            controller = TempRampController(index, self.conn)
-            self._ramp_controllers.append(controller)
-            self.register_sub_controller(controller)
-
-    @command()
-    async def cancel_all(self) -> None:
-        for rc in self._ramp_controllers:
-            await rc.enabled.process(False)
-            # TODO: The requests all get concatenated if they are sent too quickly?
-            await asyncio.sleep(0.1)
+        self.conn = SerialConnection()
 
     async def connect(self) -> None:
-        await self.conn.connect(self._settings.ip_settings)
+        await self.conn.connect(self._settings.serial_settings)
 
     async def close(self) -> None:
         await self.conn.close()
-
-
-class TempRampController(SubController):
-    start = AttrRW(Int(), handler=TempControllerHandler("S"), group="Config")
-    end = AttrRW(Int(), handler=TempControllerHandler("E"), group="Config")
-    current = AttrR(Float(prec=3), handler=TempControllerHandler("T"), group="Status")
-    enabled = AttrRW(Bool(znam="Off", onam="On"), handler=TempControllerHandler("N"))
-
-    def __init__(self, index: int, conn: IPConnection) -> None:
-        self.suffix = f"{index:02d}"
-        super().__init__(f"Ramp{self.suffix}")
-        self.conn = conn
