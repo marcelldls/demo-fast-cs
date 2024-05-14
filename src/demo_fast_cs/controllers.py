@@ -55,6 +55,7 @@ class ThorlabsAPTProtocol:
     def read_hardware_v(self, response: bytes) -> int:
         return int.from_bytes(response[84:86], byteorder='little')
 
+
 protocol = ThorlabsAPTProtocol()
 
 
