@@ -9,7 +9,7 @@ from demo_fast_cs.controllers import (
 
 
 def get_controller() -> ThorlabsMFF:
-    serial_settings = SerialConnectionSettings(port="/dev/ttyUSB1")
+    serial_settings = SerialConnectionSettings(port="/dev/ttyUSB0")
     settings = ThorlabsMFFSettings(serial_settings)
     tcont = ThorlabsMFF(settings)
     return tcont
