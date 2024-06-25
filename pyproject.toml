@@ -8,20 +8,19 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
 ]
 description = "One line description of your module"
 dependencies = [
     "numpy",
     "tickit==0.2.2",
     "pydantic",
-    "pvi",
-    "fastcs",
+    "pvi==0.5",
+    "FastCS@git+https://github.com/marcelldls/FastCS.git@tango",
 ] # Add project dependencies here, e.g. ["click", "numpy"]
 dynamic = ["version"]
 license.file = "LICENSE"
 readme = "README.rst"
-requires-python = ">=3.10"
+requires-python = "==3.10.*"
 
 [project.optional-dependencies]
 dev = [

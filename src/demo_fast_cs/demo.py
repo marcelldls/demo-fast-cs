@@ -87,6 +87,6 @@ def test_asyncio_backend() -> None:
 def main() -> None:
     # asyncio.run(test_ip_conn())
     # test_asyncio_backend()
-    create_gui()
+    # create_gui()
     # test_ioc()
     test_dsr()

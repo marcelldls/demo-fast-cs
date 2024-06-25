@@ -10,7 +10,8 @@
         }
     },
     "remoteEnv": {
-        "DISPLAY": "${localEnv:DISPLAY}"
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "TANGO_HOST": "localhost:10000"
     },
     // Add the URLs of features you want added when the container is built.
     "features": {
